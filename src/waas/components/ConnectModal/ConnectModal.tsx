@@ -1,17 +1,10 @@
 import { useValidator } from "@/waas";
 import { Button, Modal } from "@mantine/core";
+import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { createKernelAccount } from "@zerodev/sdk";
+import { walletClientToSmartAccountSigner } from "permissionless";
 import { useEffect } from "react";
-import { JsonRpcAccount, PublicClient } from "viem";
-import type { Config } from "wagmi";
-import {
-  useAccount,
-  useConfig,
-  useConnect,
-  usePublicClient,
-  useWalletClient,
-} from "wagmi";
-import { signerToEcdsaValidator } from "../../kernel/toECDSAValidatorPlugin";
+import { useConnect, usePublicClient, useWalletClient } from "wagmi";
 
 export interface ConnectModalProps {
   open: boolean;
@@ -24,18 +17,12 @@ export function ConnectModal({ onClose, open }: ConnectModalProps) {
   const { connectors, connect } = useConnect();
   const { data } = useWalletClient();
   const client = usePublicClient();
-  const { chain } = useAccount();
-  const config = useConfig();
 
   useEffect(() => {
-    const createValidator = async (
-      client: PublicClient,
-      signer: JsonRpcAccount,
-      config: Config
-    ) => {
+    const createValidator = async () => {
+      if (!data || !client) return;
       const ecdsaValidator = await signerToEcdsaValidator(client, {
-        config,
-        signer,
+        signer: walletClientToSmartAccountSigner(data),
       });
       const account = await createKernelAccount(client, {
         plugins: {
@@ -45,11 +32,8 @@ export function ConnectModal({ onClose, open }: ConnectModalProps) {
       setKernelAccount(account);
       setValidator(ecdsaValidator);
     };
-    const account = data?.account;
-    if (account && client && config) {
-      createValidator(client, account as JsonRpcAccount, config);
-    }
-  }, [data, setValidator, chain, client, config]);
+    createValidator();
+  }, [data, client]);
 
   return (
     <Modal opened={open} onClose={onClose} title={titleId}>
