@@ -1,4 +1,8 @@
-import { QueryFunctionContext, useQuery } from "@tanstack/react-query";
+import {
+  QueryFunction,
+  QueryFunctionContext,
+  useQuery,
+} from "@tanstack/react-query";
 import {
   ParamOperator,
   oneAddress,
@@ -22,7 +26,7 @@ import { useAppId } from "./useAppId";
 type SessionPermissionKey = [
   key: string,
   params: {
-    address: string | undefined | null;
+    address: Address | undefined | null;
     appId: string | undefined | null;
     client: PublicClient | undefined | null;
   }
@@ -42,9 +46,9 @@ type fetchPermissionRes = {
 };
 
 type useSessionPermissionRes = {
-  permissions: SessionPermission;
+  permissions?: SessionPermission;
   validator?: SessionKeyPlugin;
-  isExpired: boolean;
+  isExpired?: boolean;
   isLoading: boolean;
   error: any;
 };
@@ -106,15 +110,19 @@ async function getSessionValidator({
 
 async function fetchPermission({
   queryKey,
-}: QueryFunctionContext<SessionPermissionKey>): Promise<fetchPermissionRes | null> {
+}: QueryFunctionContext<SessionPermissionKey>): Promise<fetchPermissionRes> {
   const [_key, { appId, address, client }] = queryKey;
 
   const sessionKey = getSessionKey();
 
+  if (!sessionKey || !address || !client) {
+    throw new Error("Session key, address, and client are required");
+  }
+
   // mock permission
-  const signerAddress: Address = sessionKey
+  const signerAddress = sessionKey
     ? privateKeyToAddress(sessionKey)
-    : address;
+    : (address as Address);
   const masterAccountAddress = address;
   const contractAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const contractABI = parseAbi([
@@ -190,7 +198,11 @@ export function useSessionPermission(): useSessionPermissionRes {
     error,
   } = useQuery<SessionPermissionKey>({
     queryKey: ["session_permission", { appId, address, client }],
-    queryFn: fetchPermission,
+    queryFn: fetchPermission as unknown as QueryFunction<
+      SessionPermissionKey,
+      any,
+      any
+    >,
     enabled: !!appId && !!address && !!client,
   });
 
