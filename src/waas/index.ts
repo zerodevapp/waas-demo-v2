@@ -7,3 +7,10 @@ export { useValidator } from "./hooks/useValidator";
 export { useConnectModal } from "./hooks/useConnectModal";
 
 export { useSendUserOperation } from "./hooks/useSendUserOperation";
+
+export {
+  createSessionKey,
+  setSessionKey,
+  useSessionPermission,
+  type SessionPermission,
+} from "./hooks/useSessionPermission";

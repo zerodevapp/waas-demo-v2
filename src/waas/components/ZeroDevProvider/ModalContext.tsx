@@ -9,11 +9,15 @@ import {
 } from "react";
 import { ConnectModal } from "../ConnectModal/ConnectModal";
 
-function useModalStateValue() {
+export function useModalStateValue() {
   const [isModalOpen, setModalOpen] = useState(false);
+  const { validator, setValidator, kernelAccount } = useValidator();
 
   return {
-    closeModal: useCallback(() => setModalOpen(false), []),
+    closeModal: useCallback(() => {
+      setModalOpen(false);
+      if (validator && !kernelAccount) setValidator(null);
+    }, [validator, setValidator, kernelAccount]),
     isModalOpen,
     openModal: useCallback(() => setModalOpen(true), []),
   };
@@ -33,7 +37,7 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const { validator } = useValidator();
+  const { kernelAccount } = useValidator();
   const {
     closeModal: closeConnectModal,
     isModalOpen: connectModalOpen,
@@ -51,10 +55,10 @@ export function ModalProvider({ children }: ModalProviderProps) {
   }
 
   useEffect(() => {
-    if (validator) {
+    if (kernelAccount) {
       closeModals({ keepConnectModalOpen: false });
     }
-  }, [validator]);
+  }, [kernelAccount]);
 
   return (
     <ModalContext.Provider

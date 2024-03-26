@@ -2,14 +2,14 @@ import { useConnectModal, useValidator } from "@/waas";
 import { Button } from "@mantine/core";
 
 export function ConnectButton() {
-  const { validator, setValidator, setKernelAccount } = useValidator();
+  const { kernelAccount, setValidator, setKernelAccount } = useValidator();
   const { openConnectModal } = useConnectModal();
 
   return (
     <Button
       variant="outline"
       onClick={() => {
-        if (validator) {
+        if (kernelAccount) {
           setValidator(null);
           setKernelAccount(null);
           localStorage.removeItem("kernel_validator");
@@ -19,7 +19,7 @@ export function ConnectButton() {
         }
       }}
     >
-      {validator ? "Disconnect" : "Connect"}
+      {kernelAccount ? "Disconnect" : "Connect"}
     </Button>
   );
 }

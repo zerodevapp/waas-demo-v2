@@ -29,6 +29,24 @@ export function ZeroDevValidatorProvider({
     null
   );
 
+  const updateValidator = (validator: KernelValidator | null) => {
+    setValidator(validator);
+    if (validator) {
+      localStorage.setItem("kernel_validator", JSON.stringify(validator));
+    } else {
+      localStorage.removeItem("kernel_validator");
+    }
+  };
+
+  const updateKernelAccount = (kernelAccount: KernelSmartAccount | null) => {
+    setKernelAccount(kernelAccount);
+    if (kernelAccount) {
+      localStorage.setItem("kernel_account", JSON.stringify(kernelAccount));
+    } else {
+      localStorage.removeItem("kernel_account");
+    }
+  };
+
   useEffect(() => {
     const storedValidator = localStorage.getItem("kernel_validator");
     const storedAccount = localStorage.getItem("kernel_account");
@@ -45,9 +63,9 @@ export function ZeroDevValidatorProvider({
       value={useMemo(
         () => ({
           validator,
-          setValidator,
+          setValidator: updateValidator,
           kernelAccount,
-          setKernelAccount,
+          setKernelAccount: updateKernelAccount,
         }),
         [validator, kernelAccount]
       )}
