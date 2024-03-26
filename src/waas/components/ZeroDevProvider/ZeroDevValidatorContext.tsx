@@ -30,6 +30,13 @@ export function ZeroDevValidatorProvider({
   );
 
   useEffect(() => {
+    const storedValidator = localStorage.getItem("kernel_validator");
+    const storedAccount = localStorage.getItem("kernel_account");
+    if (storedValidator) setValidator(JSON.parse(storedValidator));
+    if (storedAccount) setKernelAccount(JSON.parse(storedAccount));
+  }, []);
+
+  useEffect(() => {
     if (!validator && disconnect) disconnect();
   }, [validator, disconnect]);
 

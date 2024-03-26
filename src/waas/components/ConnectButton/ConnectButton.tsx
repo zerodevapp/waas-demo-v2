@@ -12,6 +12,8 @@ export function ConnectButton() {
         if (validator) {
           setValidator(null);
           setKernelAccount(null);
+          localStorage.removeItem("kernel_validator");
+          localStorage.removeItem("kernel_account");
         } else {
           openConnectModal?.();
         }
