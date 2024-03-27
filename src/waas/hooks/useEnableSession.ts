@@ -1,8 +1,10 @@
 import { createSessionKey, setSessionKey, useValidator } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
-import { toPermissionValidator } from "@zerodev/permission-validator";
+import {
+  toPermissionValidator,
+  type Policy,
+} from "@zerodev/permission-validator";
 import { toECDSASigner } from "@zerodev/permission-validator/signers";
-import { type Policy } from "@zerodev/permission-validator/types";
 import {
   KernelV3ExecuteAbi,
   KernelValidator,
