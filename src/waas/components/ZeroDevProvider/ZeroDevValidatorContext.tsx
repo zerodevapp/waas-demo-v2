@@ -1,12 +1,15 @@
 import { KernelSmartAccount, KernelValidator } from "@zerodev/sdk";
+import type { EntryPoint } from "permissionless/types";
 import { ReactNode, createContext, useEffect, useMemo, useState } from "react";
 import { useDisconnect } from "wagmi";
 
 interface ZeroDevValidatorValue {
-  validator: KernelValidator | null;
-  setValidator: (validator: KernelValidator | null) => void;
-  kernelAccount: KernelSmartAccount | null;
-  setKernelAccount: (kernelAccount: KernelSmartAccount | null) => void;
+  validator: KernelValidator<EntryPoint> | null;
+  setValidator: (validator: KernelValidator<EntryPoint> | null) => void;
+  kernelAccount: KernelSmartAccount<EntryPoint> | null;
+  setKernelAccount: (
+    kernelAccount: KernelSmartAccount<EntryPoint> | null
+  ) => void;
 }
 
 export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
@@ -24,12 +27,12 @@ export function ZeroDevValidatorProvider({
   children,
 }: ZeroDevValidatorProviderProps) {
   const { disconnect } = useDisconnect();
-  const [validator, setValidator] = useState<KernelValidator | null>(null);
-  const [kernelAccount, setKernelAccount] = useState<KernelSmartAccount | null>(
-    null
-  );
+  const [validator, setValidator] =
+    useState<KernelValidator<EntryPoint> | null>(null);
+  const [kernelAccount, setKernelAccount] =
+    useState<KernelSmartAccount<EntryPoint> | null>(null);
 
-  const updateValidator = (validator: KernelValidator | null) => {
+  const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
     setValidator(validator);
     if (validator) {
       localStorage.setItem("kernel_validator", JSON.stringify(validator));
@@ -38,7 +41,9 @@ export function ZeroDevValidatorProvider({
     }
   };
 
-  const updateKernelAccount = (kernelAccount: KernelSmartAccount | null) => {
+  const updateKernelAccount = (
+    kernelAccount: KernelSmartAccount<EntryPoint> | null
+  ) => {
     setKernelAccount(kernelAccount);
     if (kernelAccount) {
       localStorage.setItem("kernel_account", JSON.stringify(kernelAccount));

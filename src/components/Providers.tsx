@@ -5,15 +5,15 @@ import "@mantine/core/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { polygonMumbai } from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const config = createConfig({
-    chains: [polygonMumbai],
+    chains: [sepolia],
     connectors: [injected()],
     transports: {
-      [polygonMumbai.id]: http(),
+      [sepolia.id]: http(),
     },
   });
   const queryClient = new QueryClient();

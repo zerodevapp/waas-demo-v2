@@ -6,12 +6,13 @@ import {
   createZeroDevPaymasterClient,
   KernelSmartAccount,
 } from "@zerodev/sdk";
-import { type SendUserOperationParameters } from "permissionless";
+import { EntryPoint } from "permissionless/types";
 import { useCallback, useContext } from "react";
 import { http, type Hash } from "viem";
 import { ResolvedRegister } from "wagmi";
-import { polygonMumbai } from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 import { ZeroDevValidatorContext } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
+import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 
 export type ConfigParameter<config extends Config = Config> = {
@@ -30,10 +31,10 @@ export type UseMutationReturnType<
   >
 >;
 
-export type UseSendUserOperationParameters<
-  config extends Config = Config,
-  context = unknown
-> = SendUserOperationParameters;
+// export type UseSendUserOperationParameters<
+//   config extends Config = Config,
+//   context = unknown
+// > = SendUserOperationParameters;
 
 export type UseSendUserOperationReturnType<
   config extends Config = Config,
@@ -43,7 +44,7 @@ export type UseSendUserOperationReturnType<
 export type UseSendUserOperationArgs = {
   parameters: SendUserOperationWriteArgs;
   appId: string | null;
-  account: KernelSmartAccount | null;
+  account: KernelSmartAccount<EntryPoint> | null;
 };
 
 function mutationKey({ ...config }: UseSendUserOperationArgs) {
@@ -59,7 +60,7 @@ function mutationKey({ ...config }: UseSendUserOperationArgs) {
   ] as const;
 }
 
-function mutationFn(config: UseSendUserOperationArgs) {
+async function mutationFn(config: UseSendUserOperationArgs) {
   const { account, appId, parameters } = config;
   const { to, value, data } = parameters;
 
@@ -75,33 +76,33 @@ function mutationFn(config: UseSendUserOperationArgs) {
 
   const kernelClient = createKernelAccountClient({
     account: account,
-    chain: polygonMumbai,
-    transport: http(`https://rpc.zerodev.app/api/v2/bundler/${appId}`),
-    sponsorUserOperation: async ({ userOperation }) => {
-      const zerodevPaymaster = createZeroDevPaymasterClient({
-        chain: polygonMumbai,
-        transport: http(`https://rpc.zerodev.app/api/v2/paymaster/${appId}`),
-      });
-      return zerodevPaymaster.sponsorUserOperation({
-        userOperation,
-      });
+    chain: sepolia,
+    bundlerTransport: http(`https://rpc.zerodev.app/api/v2/bundler/${appId}`),
+    entryPoint: getEntryPoint(),
+    middleware: {
+      sponsorUserOperation: async ({ userOperation }) => {
+        const zerodevPaymaster = createZeroDevPaymasterClient({
+          entryPoint: getEntryPoint(),
+          chain: sepolia,
+          transport: http(`https://rpc.zerodev.app/api/v2/paymaster/${appId}`),
+        });
+        return zerodevPaymaster.sponsorUserOperation({
+          userOperation,
+          entryPoint: getEntryPoint(),
+        });
+      },
     },
   });
 
+  const calldata = await kernelClient.account.encodeCallData({
+    to,
+    value,
+    data,
+  });
+
   return kernelClient.sendUserOperation({
-    // userOperation: {
-    //   callData: kernelClient.account.encodeCallData({
-    //     to: "0x6136b647C9971f1EDc7641e14a9E0Ca7b2626080",
-    //     value: 0n,
-    //     data: "0x",
-    //   }),
-    // },
     userOperation: {
-      callData: kernelClient.account.encodeCallData({
-        to,
-        value,
-        data,
-      }),
+      callData: calldata,
     },
   });
 }

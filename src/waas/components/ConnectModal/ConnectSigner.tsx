@@ -3,6 +3,7 @@ import { Button } from "@mantine/core";
 import { createKernelAccount } from "@zerodev/sdk";
 import { useEffect, useState } from "react";
 import { useConnect, usePublicClient } from "wagmi";
+import { getEntryPoint } from "../../utils/entryPoint";
 import { ConnectStep } from "./ConnectModal";
 import ECDSASigner from "./Signers/ECDSASigner";
 import PasskeySigner from "./Signers/PasskeySigner";
@@ -33,15 +34,17 @@ export default function ConnectSigner({
       if (isExpired) setConnectStep(ConnectStep.Permission);
       else if (isExpired === false && client && validator) {
         const account = await createKernelAccount(client, {
+          entryPoint: getEntryPoint(),
           plugins: {
             sudo: validator,
+            entryPoint: getEntryPoint(),
           },
         });
         setKernelAccount(account);
       }
     };
     handleSession();
-  }, [isExpired, client, validator]);
+  }, [isExpired, client, validator, setConnectStep, setKernelAccount]);
 
   return (
     <div className="flex flex-col items-center gap-2">
