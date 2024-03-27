@@ -23,7 +23,7 @@ export function ConnectModal({ onClose, open }: ConnectModalProps) {
 
   useEffect(() => {
     const resetStep = () => setConnectStep(ConnectStep.Connect);
-    if (!isModalOpen) resetStep();
+    resetStep();
   }, [isModalOpen]);
 
   return (

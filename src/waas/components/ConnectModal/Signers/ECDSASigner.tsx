@@ -1,4 +1,5 @@
 import { useValidator } from "@/waas";
+import { Loader } from "@mantine/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import { walletClientToSmartAccountSigner } from "permissionless";
 import { useEffect } from "react";
@@ -23,8 +24,9 @@ export default function ECDSASigner() {
   }, [data, client]);
 
   return (
-    <div>
-      <h1>ECDSA Signer</h1>
+    <div className="flex flex-col justify-center items-center">
+      <h1>ECDSA Signer Connecting...</h1>
+      {<Loader />}
     </div>
   );
 }
