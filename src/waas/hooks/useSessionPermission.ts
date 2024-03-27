@@ -4,16 +4,20 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import {
-  ParamOperator,
-  oneAddress,
-  signerToSessionKeyValidator,
-  type SessionKeyData,
-  type SessionKeyPlugin,
-} from "@zerodev/session-key";
-// import { type SmartAccountSigner } from "permissionless/accounts";
+  toPermissionValidator,
+  type PermissionPlugin,
+  type Policy,
+  type PolicyFlags,
+} from "@zerodev/permission-validator";
+import {
+  toGasPolicy,
+  toSudoPolicy,
+} from "@zerodev/permission-validator/policies";
+import { toECDSASigner } from "@zerodev/permission-validator/signers";
 import { createKernelAccount } from "@zerodev/sdk";
+import { type EntryPoint } from "permissionless/types";
 import { useEffect, useState } from "react";
-import { PublicClient, parseAbi, type Abi, type Address } from "viem";
+import { PublicClient, type Address } from "viem";
 import {
   generatePrivateKey,
   privateKeyToAccount,
@@ -21,6 +25,7 @@ import {
 } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useValidator } from "..";
+import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 
 type SessionPermissionKey = [
@@ -34,20 +39,20 @@ type SessionPermissionKey = [
 
 export type SessionPermission = {
   signer: Address;
-  validatorData?: SessionKeyData<Abi>;
-  entryPoint?: Address;
-  validatorAddress?: Address;
+  policies: Policy[];
+  entryPoint: EntryPoint;
+  flag?: PolicyFlags;
 };
 
 type fetchPermissionRes = {
-  permissions?: SessionPermission;
+  permissions?: Policy[];
   isExpired: boolean;
-  validator?: SessionKeyPlugin;
+  validator?: PermissionPlugin<EntryPoint>;
 };
 
 type useSessionPermissionRes = {
-  permissions?: SessionPermission;
-  validator?: SessionKeyPlugin;
+  permissions?: Policy[];
+  validator?: PermissionPlugin<EntryPoint>;
   isExpired?: boolean;
   isLoading: boolean;
   error: any;
@@ -89,22 +94,28 @@ async function getSessionValidator({
 
   if (isKeyExpired)
     return {
-      permissions: permissions,
+      permissions: permissions.policies,
       isExpired: isKeyExpired,
     };
-  const sessionSigner = privateKeyToAccount(sessionKey);
-  const sessionValidator = await signerToSessionKeyValidator(client, {
-    ...permissions,
-    signer: sessionSigner,
+  const sessionSigner = toECDSASigner({
+    signer: privateKeyToAccount(sessionKey),
   });
-  const isEnabled = await sessionValidator.isEnabled(
+
+  const permissionValidator = await toPermissionValidator(client, {
+    entryPoint: getEntryPoint(),
+    signer: sessionSigner,
+    policies: permissions.policies,
+  });
+
+  const isEnabled = await permissionValidator.isEnabled(
     smartAccountAddress,
-    sessionSigner.address
+    sessionSigner.account.address
   );
+
   return {
-    permissions: permissions,
+    permissions: permissions.policies,
     isExpired: !isEnabled,
-    validator: sessionValidator,
+    validator: permissionValidator,
   };
 }
 
@@ -115,47 +126,23 @@ async function fetchPermission({
 
   const sessionKey = getSessionKey();
 
-  if (!sessionKey || !address || !client) {
-    throw new Error("Session key, address, and client are required");
+  if (!client || !address) {
+    throw new Error("client & address are required");
   }
 
   // mock permission
   const signerAddress = sessionKey
     ? privateKeyToAddress(sessionKey)
-    : (address as Address);
-  const masterAccountAddress = address;
-  const contractAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
-  const contractABI = parseAbi([
-    "function mint(address _to) public",
-    "function balanceOf(address owner) external view returns (uint256 balance)",
-  ]);
+    : createSessionKey();
+
+  const gasPolicy = await toGasPolicy({
+    maxGasAllowedInWei: 1000000000000000000n,
+  });
+  const sudoPolicy = await toSudoPolicy({});
   const permissions = {
+    entryPoint: getEntryPoint(),
     signer: signerAddress,
-    validatiorData: {
-      paymaster: oneAddress,
-      permissions: [
-        {
-          target: contractAddress,
-          // Maximum value that can be transferred.  In this case we
-          // set it to zero so that no value transfer is possible.
-          valueLimit: BigInt(0),
-          // Contract abi
-          abi: contractABI,
-          // Function name
-          functionName: "mint",
-          // An array of conditions, each corresponding to an argument for
-          // the function.
-          args: [
-            {
-              // In this case, we are saying that the session key can only mint
-              // NFTs to the account itself
-              operator: ParamOperator.EQUAL,
-              value: masterAccountAddress,
-            },
-          ],
-        },
-      ],
-    },
+    policies: [gasPolicy, sudoPolicy],
   };
 
   if (!permissions) {
@@ -182,8 +169,10 @@ export function useSessionPermission(): useSessionPermissionRes {
     const getAddress = async () => {
       if (!validator || !client) return;
       const account = await createKernelAccount(client, {
+        entryPoint: getEntryPoint(),
         plugins: {
           sudo: validator,
+          entryPoint: getEntryPoint(),
         },
       });
       const smartAccountAddress = account.address;

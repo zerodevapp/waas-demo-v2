@@ -14,3 +14,5 @@ export {
   useSessionPermission,
   type SessionPermission,
 } from "./hooks/useSessionPermission";
+
+export { useEnableSession } from "./hooks/useEnableSession";

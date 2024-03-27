@@ -77,14 +77,14 @@ async function mutationFn(config: UseSendUserOperationArgs) {
   const kernelClient = createKernelAccountClient({
     account: account,
     chain: sepolia,
-    bundlerTransport: http(`https://rpc.zerodev.app/api/v2/bundler/${appId}`),
+    bundlerTransport: http( `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`),
     entryPoint: getEntryPoint(),
     middleware: {
       sponsorUserOperation: async ({ userOperation }) => {
         const zerodevPaymaster = createZeroDevPaymasterClient({
           entryPoint: getEntryPoint(),
           chain: sepolia,
-          transport: http(`https://rpc.zerodev.app/api/v2/paymaster/${appId}`),
+          transport: http(`https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`),
         });
         return zerodevPaymaster.sponsorUserOperation({
           userOperation,
