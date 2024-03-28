@@ -2,7 +2,7 @@ import { useValidator } from "@/waas";
 import { Button } from "@mantine/core";
 import { createKernelAccount } from "@zerodev/sdk";
 import { useEffect, useState } from "react";
-import { useConnect, usePublicClient } from "wagmi";
+import { useAccount, useConnect, usePublicClient } from "wagmi";
 import { getEntryPoint } from "../../utils/entryPoint";
 import ECDSASigner from "./Signers/ECDSASigner";
 import PasskeySigner from "./Signers/PasskeySigner";
@@ -18,6 +18,7 @@ export default function ConnectSigner() {
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
   const { validator, setKernelAccount } = useValidator();
   const client = usePublicClient();
+  const { isConnected } = useAccount();
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);
@@ -46,7 +47,7 @@ export default function ConnectSigner() {
           <div key={connector.uid} className="w-full">
             <Button
               onClick={() => {
-                connect({ connector });
+                if (!isConnected) connect({ connector });
                 setSignerStep(SignerType.ECDSA);
               }}
               fullWidth
