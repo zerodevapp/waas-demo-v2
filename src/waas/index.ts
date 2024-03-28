@@ -6,6 +6,8 @@ export { useValidator } from "./hooks/useValidator";
 
 export { useConnectModal } from "./hooks/useConnectModal";
 
+export { usePermissionModal } from "./hooks/usePermissionModal";
+
 export { useSendUserOperation } from "./hooks/useSendUserOperation";
 
 export {

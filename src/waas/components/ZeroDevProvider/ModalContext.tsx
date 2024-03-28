@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { ConnectModal } from "../ConnectModal/ConnectModal";
+import { PermissionModal } from "../PermissionModal";
 
 export function useModalStateValue() {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -16,7 +17,7 @@ export function useModalStateValue() {
   return {
     closeModal: useCallback(() => {
       setModalOpen(false);
-      if (validator && !kernelAccount) setValidator(null);
+      // if (validator && !kernelAccount) setValidator(null);
     }, [validator, setValidator, kernelAccount]),
     isModalOpen,
     openModal: useCallback(() => setModalOpen(true), []),
@@ -26,10 +27,13 @@ export function useModalStateValue() {
 interface ModalContextValue {
   connectModalOpen: boolean;
   openConnectModal?: () => void;
+  permissionModalOpen: boolean;
+  openPermissionModal?: () => void;
 }
 
 export const ModalContext = createContext<ModalContextValue>({
   connectModalOpen: false,
+  permissionModalOpen: false,
 });
 
 interface ModalProviderProps {
@@ -37,28 +41,25 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const { kernelAccount } = useValidator();
+  const { kernelAccount, validator } = useValidator();
+
   const {
     closeModal: closeConnectModal,
     isModalOpen: connectModalOpen,
     openModal: openConnectModal,
   } = useModalStateValue();
-
-  interface CloseModalOptions {
-    keepConnectModalOpen?: boolean;
-  }
-
-  function closeModals({ keepConnectModalOpen = false }: CloseModalOptions) {
-    if (!keepConnectModalOpen) {
-      closeConnectModal();
-    }
-  }
+  const {
+    closeModal: closePermissionModal,
+    isModalOpen: permissionModalOpen,
+    openModal: openPermissionModal,
+  } = useModalStateValue();
 
   useEffect(() => {
     if (kernelAccount) {
-      closeModals({ keepConnectModalOpen: false });
+      closeConnectModal();
+      closePermissionModal();
     }
-  }, [kernelAccount]);
+  }, [kernelAccount, validator]);
 
   return (
     <ModalContext.Provider
@@ -66,12 +67,18 @@ export function ModalProvider({ children }: ModalProviderProps) {
         () => ({
           connectModalOpen,
           openConnectModal,
+          permissionModalOpen,
+          openPermissionModal,
         }),
         [connectModalOpen, openConnectModal]
       )}
     >
       {children}
       <ConnectModal onClose={closeConnectModal} open={connectModalOpen} />
+      <PermissionModal
+        onClose={closePermissionModal}
+        open={permissionModalOpen}
+      />
     </ModalContext.Provider>
   );
 }
