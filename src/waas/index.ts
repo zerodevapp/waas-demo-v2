@@ -10,6 +10,8 @@ export { usePermissionModal } from "./hooks/usePermissionModal";
 
 export { useSendUserOperation } from "./hooks/useSendUserOperation";
 
+export { useSendUserOperationWithSession } from "./hooks/useSendUserOperationWithSession";
+
 export {
   createSessionKey,
   setSessionKey,

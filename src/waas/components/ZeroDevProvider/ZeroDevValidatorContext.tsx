@@ -10,6 +10,8 @@ interface ZeroDevValidatorValue {
   setKernelAccount: (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => void;
+  enableSignature: `0x${string}` | undefined;
+  setEnableSignature: (enableSignature: `0x${string}` | undefined) => void;
 }
 
 export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
@@ -17,6 +19,8 @@ export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
   setValidator: () => {},
   kernelAccount: null,
   setKernelAccount: () => {},
+  enableSignature: undefined,
+  setEnableSignature: () => {},
 });
 
 interface ZeroDevValidatorProviderProps {
@@ -31,6 +35,7 @@ export function ZeroDevValidatorProvider({
     useState<KernelValidator<EntryPoint> | null>(null);
   const [kernelAccount, setKernelAccount] =
     useState<KernelSmartAccount<EntryPoint> | null>(null);
+  const [enableSignature, setEnableSignature] = useState<`0x${string}`>();
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
     setValidator(validator);
@@ -71,8 +76,10 @@ export function ZeroDevValidatorProvider({
           setValidator: updateValidator,
           kernelAccount,
           setKernelAccount: updateKernelAccount,
+          enableSignature,
+          setEnableSignature,
         }),
-        [validator, kernelAccount]
+        [validator, kernelAccount, enableSignature]
       )}
     >
       {children}

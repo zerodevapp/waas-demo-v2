@@ -1,9 +1,10 @@
 "use client";
 import { ConnectButton, useSendUserOperation, useValidator } from "@/waas";
-import { Button, Title } from "@mantine/core";
+import { Button, Loader, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 export default function SmartAccountBlock() {
+  const [isLoading, setIsLoading] = useState(false);
   const { kernelAccount } = useValidator();
   const { data, write, error } = useSendUserOperation();
   const [mintCalldata, setMintCalldata] = useState<`0x${string}` | null>(null);
@@ -16,6 +17,7 @@ export default function SmartAccountBlock() {
       );
     }
   }, [kernelAccount]);
+  useEffect(() => setIsLoading(false), [data, error]);
 
   return (
     <>
@@ -25,12 +27,13 @@ export default function SmartAccountBlock() {
         <ConnectButton />
         <Button
           variant="outline"
-          disabled={!mintCalldata}
-          onClick={() =>
-            write({ to: nftAddress, value: 0n, data: mintCalldata! })
-          }
+          disabled={!mintCalldata || isLoading || !write}
+          onClick={() => {
+            setIsLoading(true);
+            write?.({ to: nftAddress, value: 0n, data: mintCalldata! });
+          }}
         >
-          Mint
+          {isLoading ? <Loader /> : "Mint"}
         </Button>
       </div>
       {data && <div className="mt-4">UserOp Hash: {data}</div>}

@@ -1,20 +1,32 @@
 "use client";
 import {
   usePermissionModal,
-  useSendUserOperation,
+  useSendUserOperationWithSession,
   useSessionPermission,
+  useValidator,
 } from "@/waas";
 import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Title } from "@mantine/core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SessionBlock() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { kernelAccount, enableSignature } = useValidator();
   const { openPermissionModal } = usePermissionModal();
   const { policies } = useMockedPolicy();
   const { isExpired } = useSessionPermission({ policies });
-  const { data, write, error } = useSendUserOperation();
+  const { data, write, error } = useSendUserOperationWithSession({ policies });
   const [mintCalldata, setMintCalldata] = useState<`0x${string}` | null>(null);
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
+
+  useEffect(() => {
+    if (kernelAccount) {
+      setMintCalldata(
+        `0x6a627842000000000000000000000000${kernelAccount.address.slice(2)}`
+      );
+    }
+  }, [kernelAccount]);
+  useEffect(() => setIsLoading(false), [data, error]);
 
   return (
     <>
@@ -25,12 +37,17 @@ export default function SessionBlock() {
         </Button>
         <Button
           variant="outline"
-          disabled={isExpired !== false}
-          loading={isExpired === undefined}
+          disabled={(isExpired && !enableSignature) || isLoading || !write}
+          loading={isExpired === undefined || isLoading}
+          onClick={() => {
+            setIsLoading(true);
+            write?.({ to: nftAddress, value: 0n, data: mintCalldata! });
+          }}
         >
           Mint With Session
         </Button>
       </div>
+      {data && <div className="mt-4">MintWithSession UserOp Hash: {data}</div>}
     </>
   );
 }

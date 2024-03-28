@@ -131,7 +131,6 @@ async function fetchPermission({
     throw new Error("client & address are required");
   }
 
-  // mock permission
   const signerAddress = sessionKey
     ? privateKeyToAddress(sessionKey)
     : createSessionKey();

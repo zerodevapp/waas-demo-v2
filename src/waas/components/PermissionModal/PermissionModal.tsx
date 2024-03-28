@@ -18,11 +18,11 @@ export default function PermissionModal({
 }: PermissionModalProps) {
   const titleId = "Permission";
   const [isLoading, setIsLoading] = useState(false);
-  const { setKernelAccount } = useValidator();
+  const { setEnableSignature } = useValidator();
   const { policies } = useMockedPolicy();
   const { permissions } = useSessionPermission({ policies });
   const { write, data, error } = useCreatePermission({
-    onSuccess: (data) => setKernelAccount(data),
+    onSuccess: (data) => setEnableSignature(data),
   });
 
   useEffect(() => {
@@ -41,10 +41,10 @@ export default function PermissionModal({
         <h1>Permission Approval</h1>
         <Button
           variant="outline"
-          disabled={!permissions || isLoading}
+          disabled={!permissions || isLoading || !write}
           onClick={() => {
             setIsLoading(true);
-            write(permissions);
+            write?.(permissions);
           }}
         >
           Approve

@@ -9,47 +9,37 @@ import {
   KernelV3ExecuteAbi,
   KernelValidator,
   createKernelAccount,
-  createKernelAccountClient,
-  createZeroDevPaymasterClient,
-  type KernelSmartAccount,
 } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
-import { useCallback, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
-  encodeFunctionData,
   getAbiItem,
-  http,
-  parseAbi,
   toFunctionSelector,
   zeroAddress,
   type PublicClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
-import { sepolia } from "wagmi/chains";
 import { getEntryPoint } from "../utils/entryPoint";
-import { useAppId } from "./useAppId";
 
 export type CreatePermissionWriteArgs = Policy[] | undefined;
 
 export type UseCreatePermissionKey = {
   validator: KernelValidator<EntryPoint> | null;
   policies: CreatePermissionWriteArgs;
-  appId: string | null;
   client: PublicClient | undefined;
 };
 
 export type UseCreatePermissionArgs = {
-  onSuccess?: (data: KernelSmartAccount<EntryPoint>) => void;
+  onSuccess?: (data: `0x${string}`) => void;
 };
 
 function mutationKey({ ...config }: UseCreatePermissionKey) {
-  const { appId, policies, client, validator } = config;
+  const { policies, client, validator } = config;
 
   return [
     {
       entity: "CreatePermission",
-      appId,
       client,
       validator,
       policies,
@@ -58,7 +48,6 @@ function mutationKey({ ...config }: UseCreatePermissionKey) {
 }
 
 async function createSessionClient(
-  appId: string,
   validator: KernelValidator<EntryPoint>,
   policies: Policy[],
   client: PublicClient
@@ -87,60 +76,17 @@ async function createSessionClient(
       },
     },
   });
+  const pluginEnableSig =
+    await permissionAccount.kernelPluginManager.getPluginEnableSignature(
+      permissionAccount.address
+    );
 
-  const kernelClient = createKernelAccountClient({
-    account: permissionAccount,
-    chain: sepolia,
-    bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
-    ),
-    entryPoint: getEntryPoint(),
-    middleware: {
-      sponsorUserOperation: async ({ userOperation }) => {
-        const kernelPaymaster = createZeroDevPaymasterClient({
-          entryPoint: getEntryPoint(),
-          chain: sepolia,
-          transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
-          ),
-        });
-        return kernelPaymaster.sponsorUserOperation({
-          userOperation,
-          entryPoint: getEntryPoint(),
-        });
-      },
-    },
-  });
-
-  const contractAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
-  const contractABI = parseAbi([
-    "function mint(address _to) public",
-    "function balanceOf(address owner) external view returns (uint256 balance)",
-  ]);
-
-  const userOpHash = await kernelClient.sendUserOperation({
-    userOperation: {
-      callData: await permissionAccount.encodeCallData({
-        to: contractAddress,
-        value: BigInt(0),
-        data: encodeFunctionData({
-          abi: contractABI,
-          functionName: "mint",
-          args: [permissionAccount.address],
-        }),
-      }),
-    },
-  });
-  console.log(userOpHash);
-  return permissionAccount;
+  return pluginEnableSig;
 }
 
 function mutationFn(config: UseCreatePermissionKey) {
-  const { policies, validator, appId, client } = config;
+  const { policies, validator, client } = config;
 
-  if (!appId) {
-    throw new Error("No appId provided");
-  }
   if (!validator) {
     throw new Error("No validator provided");
   }
@@ -151,12 +97,11 @@ function mutationFn(config: UseCreatePermissionKey) {
     throw new Error("No client provided");
   }
 
-  return createSessionClient(appId, validator, policies, client);
+  return createSessionClient(validator, policies, client);
 }
 
 export function useCreatePermission(args?: UseCreatePermissionArgs) {
   const { validator } = useValidator();
-  const { appId } = useAppId();
   const client = usePublicClient();
 
   const {
@@ -172,7 +117,6 @@ export function useCreatePermission(args?: UseCreatePermissionArgs) {
     variables,
   } = useMutation({
     mutationKey: mutationKey({
-      appId,
       client,
       validator,
       policies: undefined,
@@ -185,19 +129,15 @@ export function useCreatePermission(args?: UseCreatePermissionArgs) {
     if (error) setSessionKey(null);
   }, [error]);
 
-  const write = useCallback(
-    (policies: CreatePermissionWriteArgs) => {
-      if (!appId || !validator || !client || !policies) return undefined;
-
+  const write = useMemo(() => {
+    if (!validator || !client) return undefined;
+    return (policies: CreatePermissionWriteArgs) =>
       mutate({
         policies,
-        appId,
         client,
         validator,
       });
-    },
-    [mutate, appId, validator, client]
-  );
+  }, [mutate, validator, client]);
 
   return {
     data,

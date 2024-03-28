@@ -41,7 +41,7 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const { kernelAccount, validator } = useValidator();
+  const { kernelAccount, validator, enableSignature } = useValidator();
 
   const {
     closeModal: closeConnectModal,
@@ -57,9 +57,12 @@ export function ModalProvider({ children }: ModalProviderProps) {
   useEffect(() => {
     if (kernelAccount) {
       closeConnectModal();
-      closePermissionModal();
     }
   }, [kernelAccount, validator]);
+
+  useEffect(() => {
+    if (enableSignature) closePermissionModal();
+  }, [enableSignature]);
 
   return (
     <ModalContext.Provider

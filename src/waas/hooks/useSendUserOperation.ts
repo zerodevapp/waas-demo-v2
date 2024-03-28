@@ -1,3 +1,4 @@
+import { useValidator } from "@/waas";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import type { Config } from "@wagmi/core";
 import { type Evaluate, type UnionOmit } from "@wagmi/core/internal";
@@ -7,11 +8,10 @@ import {
   KernelSmartAccount,
 } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
-import { useCallback, useContext } from "react";
+import { useMemo } from "react";
 import { http, type Hash } from "viem";
 import { ResolvedRegister } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { ZeroDevValidatorContext } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 
@@ -30,11 +30,6 @@ export type UseMutationReturnType<
     "mutate" | "mutateAsync"
   >
 >;
-
-// export type UseSendUserOperationParameters<
-//   config extends Config = Config,
-//   context = unknown
-// > = SendUserOperationParameters;
 
 export type UseSendUserOperationReturnType<
   config extends Config = Config,
@@ -77,14 +72,18 @@ async function mutationFn(config: UseSendUserOperationArgs) {
   const kernelClient = createKernelAccountClient({
     account: account,
     chain: sepolia,
-    bundlerTransport: http( `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`),
+    bundlerTransport: http(
+      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
+    ),
     entryPoint: getEntryPoint(),
     middleware: {
       sponsorUserOperation: async ({ userOperation }) => {
         const zerodevPaymaster = createZeroDevPaymasterClient({
           entryPoint: getEntryPoint(),
           chain: sepolia,
-          transport: http(`https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`),
+          transport: http(
+            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
+          ),
         });
         return zerodevPaymaster.sponsorUserOperation({
           userOperation,
@@ -117,7 +116,7 @@ export function useSendUserOperation<
   config extends Config = ResolvedRegister["config"],
   context = unknown
 >() {
-  const { kernelAccount } = useContext(ZeroDevValidatorContext);
+  const { kernelAccount } = useValidator();
   const { appId } = useAppId();
 
   const {
@@ -140,18 +139,16 @@ export function useSendUserOperation<
     mutationFn,
   });
 
-  const write = useCallback(
-    (parameters: SendUserOperationWriteArgs) => {
-      if (!parameters || !appId || !kernelAccount) return undefined;
-
+  const write = useMemo(() => {
+    if (!kernelAccount || !appId) return undefined;
+    return (parameters: SendUserOperationWriteArgs) => {
       mutate({
         parameters,
         account: kernelAccount,
         appId,
       });
-    },
-    [mutate, appId, kernelAccount]
-  );
+    };
+  }, [mutate, appId, kernelAccount]);
 
   return {
     data,
