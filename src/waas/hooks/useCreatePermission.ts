@@ -11,6 +11,7 @@ import {
   createKernelAccount,
   createKernelAccountClient,
   createZeroDevPaymasterClient,
+  type KernelSmartAccount,
 } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
 import { useCallback, useEffect } from "react";
@@ -29,25 +30,29 @@ import { sepolia } from "wagmi/chains";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 
-export type EnableSessionWriteArgs = Policy[] | undefined;
+export type CreatePermissionWriteArgs = Policy[] | undefined;
 
-export type UseEnableSessionArgs = {
+export type UseCreatePermissionKey = {
   validator: KernelValidator<EntryPoint> | null;
-  parameters: EnableSessionWriteArgs;
+  policies: CreatePermissionWriteArgs;
   appId: string | null;
   client: PublicClient | undefined;
 };
 
-function mutationKey({ ...config }: UseEnableSessionArgs) {
-  const { appId, parameters, client, validator } = config;
+export type UseCreatePermissionArgs = {
+  onSuccess?: (data: KernelSmartAccount<EntryPoint>) => void;
+};
+
+function mutationKey({ ...config }: UseCreatePermissionKey) {
+  const { appId, policies, client, validator } = config;
 
   return [
     {
-      entity: "enableSession",
+      entity: "CreatePermission",
       appId,
       client,
       validator,
-      parameters,
+      policies,
     },
   ] as const;
 }
@@ -55,7 +60,7 @@ function mutationKey({ ...config }: UseEnableSessionArgs) {
 async function createSessionClient(
   appId: string,
   validator: KernelValidator<EntryPoint>,
-  parameters: Policy[],
+  policies: Policy[],
   client: PublicClient
 ) {
   const sessionKey = createSessionKey();
@@ -65,7 +70,7 @@ async function createSessionClient(
   const permissionValidator = await toPermissionValidator(client, {
     entryPoint: getEntryPoint(),
     signer: ecdsaModularSigner,
-    policies: parameters,
+    policies: policies,
   });
 
   const permissionAccount = await createKernelAccount(client, {
@@ -130,8 +135,8 @@ async function createSessionClient(
   return permissionAccount;
 }
 
-function mutationFn(config: UseEnableSessionArgs) {
-  const { parameters, validator, appId, client } = config;
+function mutationFn(config: UseCreatePermissionKey) {
+  const { policies, validator, appId, client } = config;
 
   if (!appId) {
     throw new Error("No appId provided");
@@ -139,17 +144,17 @@ function mutationFn(config: UseEnableSessionArgs) {
   if (!validator) {
     throw new Error("No validator provided");
   }
-  if (!parameters) {
+  if (!policies) {
     throw new Error("No parameters provided");
   }
   if (!client) {
     throw new Error("No client provided");
   }
 
-  return createSessionClient(appId, validator, parameters, client);
+  return createSessionClient(appId, validator, policies, client);
 }
 
-export function useEnableSession() {
+export function useCreatePermission(args?: UseCreatePermissionArgs) {
   const { validator } = useValidator();
   const { appId } = useAppId();
   const client = usePublicClient();
@@ -170,9 +175,10 @@ export function useEnableSession() {
       appId,
       client,
       validator,
-      parameters: undefined,
+      policies: undefined,
     }),
     mutationFn,
+    onSuccess: args?.onSuccess,
   });
 
   useEffect(() => {
@@ -180,17 +186,17 @@ export function useEnableSession() {
   }, [error]);
 
   const write = useCallback(
-    (parameters: EnableSessionWriteArgs) => {
-      if (!appId || !validator || !client || !parameters) return undefined;
+    (policies: CreatePermissionWriteArgs) => {
+      if (!appId || !validator || !client || !policies) return undefined;
 
       mutate({
-        parameters,
+        policies,
         appId,
         client,
         validator,
       });
     },
-    [mutate, appId, validator]
+    [mutate, appId, validator, client]
   );
 
   return {

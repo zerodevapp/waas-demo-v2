@@ -1,4 +1,9 @@
-import { useEnableSession, useSessionPermission, useValidator } from "@/waas";
+import {
+  useCreatePermission,
+  useSessionPermission,
+  useValidator,
+} from "@/waas";
+import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Loader, Modal } from "@mantine/core";
 import { useEffect, useState } from "react";
 
@@ -14,17 +19,11 @@ export default function PermissionModal({
   const titleId = "Permission";
   const [isLoading, setIsLoading] = useState(false);
   const { setKernelAccount } = useValidator();
-  const { permissions } = useSessionPermission();
-  const { write, data, error } = useEnableSession();
-
-  useEffect(() => {
-    const setAccount = () => {
-      if (data) {
-        setKernelAccount(data);
-      }
-    };
-    setAccount();
-  }, [data]);
+  const { policies } = useMockedPolicy();
+  const { permissions } = useSessionPermission({ policies });
+  const { write, data, error } = useCreatePermission({
+    onSuccess: (data) => setKernelAccount(data),
+  });
 
   useEffect(() => {
     setIsLoading(false);

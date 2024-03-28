@@ -9,10 +9,6 @@ import {
   type Policy,
   type PolicyFlags,
 } from "@zerodev/permission-validator";
-import {
-  toGasPolicy,
-  toSudoPolicy,
-} from "@zerodev/permission-validator/policies";
 import { toECDSASigner } from "@zerodev/permission-validator/signers";
 import { createKernelAccount } from "@zerodev/sdk";
 import { type EntryPoint } from "permissionless/types";
@@ -28,12 +24,13 @@ import { useValidator } from "..";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 
-type SessionPermissionKey = [
+export type SessionPermissionKey = [
   key: string,
   params: {
     address: Address | undefined | null;
     appId: string | undefined | null;
     client: PublicClient | undefined | null;
+    policies: Policy[] | undefined | null;
   }
 ];
 
@@ -44,18 +41,22 @@ export type SessionPermission = {
   flag?: PolicyFlags;
 };
 
-type fetchPermissionRes = {
+export type fetchPermissionRes = {
   permissions?: Policy[];
   isExpired: boolean;
   validator?: PermissionPlugin<EntryPoint>;
 };
 
-type useSessionPermissionRes = {
+export type useSessionPermissionRes = {
   permissions?: Policy[];
   validator?: PermissionPlugin<EntryPoint>;
   isExpired?: boolean;
   isLoading: boolean;
   error: any;
+};
+
+export type useSessionPermissionArgs = {
+  policies: Policy[] | undefined;
 };
 
 export function getSessionKey(): `0x${string}` | null {
@@ -122,7 +123,7 @@ async function getSessionValidator({
 async function fetchPermission({
   queryKey,
 }: QueryFunctionContext<SessionPermissionKey>): Promise<fetchPermissionRes> {
-  const [_key, { appId, address, client }] = queryKey;
+  const [_key, { appId, address, client, policies }] = queryKey;
 
   const sessionKey = getSessionKey();
 
@@ -135,14 +136,10 @@ async function fetchPermission({
     ? privateKeyToAddress(sessionKey)
     : createSessionKey();
 
-  const gasPolicy = await toGasPolicy({
-    maxGasAllowedInWei: 1000000000000000000n,
-  });
-  const sudoPolicy = await toSudoPolicy({});
   const permissions = {
     entryPoint: getEntryPoint(),
     signer: signerAddress,
-    policies: [gasPolicy, sudoPolicy],
+    policies: policies!,
   };
 
   if (!permissions) {
@@ -159,7 +156,9 @@ async function fetchPermission({
   });
 }
 
-export function useSessionPermission(): useSessionPermissionRes {
+export function useSessionPermission({
+  policies,
+}: useSessionPermissionArgs): useSessionPermissionRes {
   const { appId } = useAppId();
   const { validator } = useValidator();
   const [address, setAddress] = useState<string | undefined>();
@@ -186,13 +185,13 @@ export function useSessionPermission(): useSessionPermissionRes {
     isLoading,
     error,
   } = useQuery<SessionPermissionKey>({
-    queryKey: ["session_permission", { appId, address, client }],
+    queryKey: ["session_permission", { appId, address, client, policies }],
     queryFn: fetchPermission as unknown as QueryFunction<
       SessionPermissionKey,
       any,
       any
     >,
-    enabled: !!appId && !!address && !!client,
+    enabled: !!appId && !!address && !!client && !!policies,
   });
 
   return {

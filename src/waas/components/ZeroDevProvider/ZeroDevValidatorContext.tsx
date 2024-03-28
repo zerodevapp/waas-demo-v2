@@ -34,22 +34,22 @@ export function ZeroDevValidatorProvider({
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
     setValidator(validator);
-    if (validator) {
-      localStorage.setItem("kernel_validator", JSON.stringify(validator));
-    } else {
-      localStorage.removeItem("kernel_validator");
-    }
+    // if (validator) {
+    //   localStorage.setItem("kernel_validator", JSON.stringify(validator));
+    // } else {
+    //   localStorage.removeItem("kernel_validator");
+    // }
   };
 
   const updateKernelAccount = (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => {
     setKernelAccount(kernelAccount);
-    if (kernelAccount) {
-      localStorage.setItem("kernel_account", JSON.stringify(kernelAccount));
-    } else {
-      localStorage.removeItem("kernel_account");
-    }
+    // if (kernelAccount) {
+    //   localStorage.setItem("kernel_account", JSON.stringify(kernelAccount));
+    // } else {
+    //   localStorage.removeItem("kernel_account");
+    // }
   };
 
   useEffect(() => {
