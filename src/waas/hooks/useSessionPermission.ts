@@ -59,8 +59,13 @@ export function getSessionKey(
   const sessionKey = localStorage.getItem(`kernel_session_key`);
   if (!sessionKey) return null;
 
-  const key = JSON.parse(sessionKey)[permissionId];
-  return key ? (key as `0x${string}`) : null;
+  try {
+    const parsedKey = JSON.parse(sessionKey);
+    const key = parsedKey[permissionId];
+    return key ? (key as `0x${string}`) : null;
+  } catch (error) {
+    return null;
+  }
 }
 
 export function setSessionKey(
