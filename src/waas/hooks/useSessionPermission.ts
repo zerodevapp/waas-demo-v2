@@ -19,6 +19,10 @@ import { useValidator } from "..";
 import { getEntryPoint } from "../utils/entryPoint";
 import { getPermissionId } from "../utils/mock/getPermissionId";
 
+type SessionKeys = {
+  [permissionId: string]: `0x${string}`;
+};
+
 export type SessionPermissionKey = [
   key: string,
   params: {
@@ -72,9 +76,13 @@ export function setSessionKey(
   permissionId: `0x${string}`,
   sessionKey: `0x${string}`
 ) {
-  const sessionKeys = JSON.parse(
-    localStorage.getItem(`kernel_session_key`) || "{}"
-  );
+  let sessionKeys: SessionKeys = {};
+  try {
+    sessionKeys = JSON.parse(
+      localStorage.getItem(`kernel_session_key`) || "{}"
+    );
+  } catch (err) {}
+
   sessionKeys[permissionId] = sessionKey;
   localStorage.setItem(`kernel_session_key`, JSON.stringify(sessionKeys));
 }
