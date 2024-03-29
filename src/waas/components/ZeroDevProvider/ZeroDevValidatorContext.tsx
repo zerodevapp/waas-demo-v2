@@ -3,6 +3,10 @@ import type { EntryPoint } from "permissionless/types";
 import { ReactNode, createContext, useEffect, useMemo, useState } from "react";
 import { useDisconnect } from "wagmi";
 
+type EnableSignaturesType = {
+  [permissionId: `0x${string}`]: `0x${string}`;
+};
+
 interface ZeroDevValidatorValue {
   validator: KernelValidator<EntryPoint> | null;
   setValidator: (validator: KernelValidator<EntryPoint> | null) => void;
@@ -10,8 +14,11 @@ interface ZeroDevValidatorValue {
   setKernelAccount: (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => void;
-  enableSignature: `0x${string}` | undefined;
-  setEnableSignature: (enableSignature: `0x${string}` | undefined) => void;
+  enableSignature: EnableSignaturesType;
+  setEnableSignature: (
+    permissionId: `0x${string}`,
+    enableSignature: `0x${string}`
+  ) => void;
 }
 
 export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
@@ -19,7 +26,7 @@ export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
   setValidator: () => {},
   kernelAccount: null,
   setKernelAccount: () => {},
-  enableSignature: undefined,
+  enableSignature: {},
   setEnableSignature: () => {},
 });
 
@@ -35,7 +42,21 @@ export function ZeroDevValidatorProvider({
     useState<KernelValidator<EntryPoint> | null>(null);
   const [kernelAccount, setKernelAccount] =
     useState<KernelSmartAccount<EntryPoint> | null>(null);
-  const [enableSignature, setEnableSignature] = useState<`0x${string}`>();
+  const [enableSignature, setEnableSignature] = useState<EnableSignaturesType>(
+    {}
+  );
+
+  const updateEnableSignature = (
+    permissionId: `0x${string}`,
+    enableSignature: `0x${string}`
+  ) => {
+    setEnableSignature((prev) => {
+      return {
+        ...prev,
+        [permissionId]: enableSignature,
+      };
+    });
+  };
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
     setValidator(validator);
@@ -77,7 +98,7 @@ export function ZeroDevValidatorProvider({
           kernelAccount,
           setKernelAccount: updateKernelAccount,
           enableSignature,
-          setEnableSignature,
+          setEnableSignature: updateEnableSignature,
         }),
         [validator, kernelAccount, enableSignature]
       )}

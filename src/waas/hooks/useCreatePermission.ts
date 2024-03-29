@@ -11,7 +11,7 @@ import {
   createKernelAccount,
 } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   getAbiItem,
   toFunctionSelector,
@@ -21,6 +21,7 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { getEntryPoint } from "../utils/entryPoint";
+import { getPermissionId } from "../utils/mock/getPermissionId";
 
 export type CreatePermissionWriteArgs = Policy[] | undefined;
 
@@ -30,8 +31,13 @@ export type UseCreatePermissionKey = {
   client: PublicClient | undefined;
 };
 
+type UseCreatePermissionData = {
+  permissionId: `0x${string}`;
+  enableSignature: `0x${string}`;
+};
+
 export type UseCreatePermissionArgs = {
-  onSuccess?: (data: `0x${string}`) => void;
+  onSuccess?: (data: UseCreatePermissionData) => void;
 };
 
 function mutationKey({ ...config }: UseCreatePermissionKey) {
@@ -81,7 +87,13 @@ async function createSessionClient(
       permissionAccount.address
     );
 
-  return pluginEnableSig;
+  const permissionId = getPermissionId(policies);
+  setSessionKey(permissionId, sessionKey);
+
+  return {
+    permissionId: permissionId,
+    enableSignature: pluginEnableSig,
+  };
 }
 
 function mutationFn(config: UseCreatePermissionKey) {
@@ -124,10 +136,6 @@ export function useCreatePermission(args?: UseCreatePermissionArgs) {
     mutationFn,
     onSuccess: args?.onSuccess,
   });
-
-  useEffect(() => {
-    if (error) setSessionKey(null);
-  }, [error]);
 
   const write = useMemo(() => {
     if (!validator || !client) return undefined;

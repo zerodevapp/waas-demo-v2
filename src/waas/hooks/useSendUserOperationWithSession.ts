@@ -21,6 +21,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { getEntryPoint } from "../utils/entryPoint";
+import { getPermissionId } from "../utils/mock/getPermissionId";
 import { useAppId } from "./useAppId";
 import { getSessionKey, useSessionPermission } from "./useSessionPermission";
 import { useValidator } from "./useValidator";
@@ -85,7 +86,10 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
   if (!policies) {
     throw new Error("Policies are required");
   }
-  const sessionKey = getSessionKey();
+
+  const permissionId = getPermissionId(policies);
+  const sessionKey = getSessionKey(permissionId);
+
   if (!sessionKey) {
     throw new Error("No Session Key found");
   }
@@ -177,7 +181,7 @@ export function useSendUserOperationWithSession({
       publicClient: client,
       policies,
       isExpired,
-      enableSignature,
+      enableSignature: enableSignature[getPermissionId(policies)],
     }),
     mutationFn,
   });
@@ -193,7 +197,7 @@ export function useSendUserOperationWithSession({
         publicClient: client,
         policies,
         isExpired,
-        enableSignature,
+        enableSignature: enableSignature[getPermissionId(policies)],
       });
     };
   }, [mutate, client, appId, validator, policies, isExpired, enableSignature]);
