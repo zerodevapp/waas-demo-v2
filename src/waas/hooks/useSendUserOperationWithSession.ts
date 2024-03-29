@@ -1,30 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { Policy, toPermissionValidator } from "@zerodev/permission-validator";
-import { toECDSASigner } from "@zerodev/permission-validator/signers";
+import { Policy } from "@zerodev/permission-validator";
 import {
-  KernelV3ExecuteAbi,
-  createKernelAccount,
-  createKernelAccountClient,
-  createZeroDevPaymasterClient,
-  type KernelValidator,
+  type KernelAccountClient,
+  type KernelSmartAccount,
 } from "@zerodev/sdk";
 import { type EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import {
-  getAbiItem,
-  http,
-  toFunctionSelector,
-  zeroAddress,
-  type PublicClient,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { usePublicClient } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { getEntryPoint } from "../utils/entryPoint";
-import { getPermissionId } from "../utils/mock/getPermissionId";
-import { useAppId } from "./useAppId";
-import { getSessionKey, useSessionPermission } from "./useSessionPermission";
-import { useValidator } from "./useValidator";
+import { useSessionKernelClient } from "./useSessionKernelClient";
 
 export type UseSendUserOperationWithSessionArgs = {
   policies: Policy[] | undefined;
@@ -37,113 +19,39 @@ export type SendUserOperationWithSessionWriteArgs = Partial<{
 }>;
 
 export type UseSendUserOperationWithSessionKey = {
-  publicClient: PublicClient | undefined;
-  validator: KernelValidator<EntryPoint> | null;
-  appId: string | null;
   parameters: SendUserOperationWithSessionWriteArgs;
   policies: Policy[] | undefined;
-  isExpired: boolean | undefined;
-  enableSignature: `0x${string}` | undefined;
+  kernelClient: KernelAccountClient<EntryPoint> | undefined;
+  kernelAccount: KernelSmartAccount<EntryPoint> | undefined;
 };
 
 function mutationKey({ ...config }: UseSendUserOperationWithSessionKey) {
-  const { validator, appId, parameters } = config;
+  const { parameters, kernelClient, kernelAccount } = config;
 
   return [
     {
       entity: "sendUserOperationWithSession",
-      validator,
-      appId,
       parameters,
+      kernelClient,
+      kernelAccount,
     },
   ] as const;
 }
 
 async function mutationFn(config: UseSendUserOperationWithSessionKey) {
-  const {
-    validator,
-    appId,
-    parameters,
-    publicClient,
-    policies,
-    isExpired,
-    enableSignature,
-  } = config;
+  const { parameters, kernelClient, kernelAccount } = config;
   const { to, value, data } = parameters;
 
-  if (isExpired && !enableSignature) {
-    throw new Error("Session is expired");
-  }
-  if (!validator) {
-    throw new Error("Validator is required");
+  if (!kernelClient || !kernelAccount) {
+    throw new Error("Kernel Client is required");
   }
   if (to === undefined || value === undefined || data === undefined) {
     throw new Error("UserOperation is required");
   }
-  if (!appId) {
-    throw new Error("API key is required");
-  }
-  if (!policies) {
-    throw new Error("Policies are required");
-  }
-
-  const permissionId = getPermissionId(policies);
-  const sessionKey = getSessionKey(permissionId);
-
-  if (!sessionKey) {
-    throw new Error("No Session Key found");
-  }
-  const sessionSigner = privateKeyToAccount(sessionKey);
-  const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
-  const permissionValidator = await toPermissionValidator(publicClient!, {
-    entryPoint: getEntryPoint(),
-    signer: ecdsaModularSigner,
-    policies: policies,
-  });
-
-  const permissionAccount = await createKernelAccount(publicClient!, {
-    entryPoint: getEntryPoint(),
-    plugins: {
-      sudo: validator,
-      regular: permissionValidator,
-      entryPoint: getEntryPoint(),
-      executorData: {
-        executor: zeroAddress,
-        selector: toFunctionSelector(
-          getAbiItem({ abi: KernelV3ExecuteAbi, name: "execute" })
-        ),
-      },
-      pluginEnableSignature: enableSignature,
-    },
-  });
-
-  const kernelClient = createKernelAccountClient({
-    account: permissionAccount,
-    chain: sepolia,
-    bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
-    ),
-    entryPoint: getEntryPoint(),
-    middleware: {
-      sponsorUserOperation: async ({ userOperation }) => {
-        const kernelPaymaster = createZeroDevPaymasterClient({
-          entryPoint: getEntryPoint(),
-          chain: sepolia,
-          transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
-          ),
-        });
-        return kernelPaymaster.sponsorUserOperation({
-          userOperation,
-          entryPoint: getEntryPoint(),
-        });
-      },
-    },
-  });
 
   const userOpHash = await kernelClient.sendUserOperation({
     userOperation: {
-      callData: await permissionAccount.encodeCallData({
+      callData: await kernelAccount.encodeCallData({
         to,
         value,
         data,
@@ -157,10 +65,9 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 export function useSendUserOperationWithSession({
   policies,
 }: UseSendUserOperationWithSessionArgs) {
-  const { validator, enableSignature } = useValidator();
-  const { isExpired } = useSessionPermission({ policies });
-  const { appId } = useAppId();
-  const client = usePublicClient();
+  const { kernelClient, kernelAccount } = useSessionKernelClient({
+    policies: policies,
+  });
 
   const {
     data,
@@ -175,32 +82,25 @@ export function useSendUserOperationWithSession({
     variables,
   } = useMutation({
     mutationKey: mutationKey({
-      appId,
-      validator: validator,
       parameters: {},
-      publicClient: client,
       policies,
-      isExpired,
-      enableSignature: enableSignature[getPermissionId(policies)],
+      kernelClient,
+      kernelAccount,
     }),
     mutationFn,
   });
 
   const write = useMemo(() => {
-    if (!appId || !validator || !client || !policies || isExpired === undefined)
-      return undefined;
+    if (!policies || !kernelAccount || !kernelClient) return undefined;
     return (parameters: SendUserOperationWithSessionWriteArgs) => {
       mutate({
         parameters,
-        validator,
-        appId,
-        publicClient: client,
         policies,
-        isExpired,
-        enableSignature: enableSignature[getPermissionId(policies)],
+        kernelClient,
+        kernelAccount,
       });
     };
-  }, [mutate, client, appId, validator, policies, isExpired, enableSignature]);
+  }, [mutate, policies, kernelClient, kernelAccount]);
 
   return {
     data,
