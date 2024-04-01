@@ -14,12 +14,7 @@ export { useSendUserOperationWithSession } from "./hooks/useSendUserOperationWit
 
 export { useSessionKernelClient } from "./hooks/useSessionKernelClient";
 
-export {
-  createSessionKey,
-  setSessionKey,
-  useSessionPermission,
-  type SessionPermission,
-} from "./hooks/useSessionPermission";
+export { useSessionPermission } from "./hooks/useSessionPermission";
 
 export { useCreatePermission } from "./hooks/useCreatePermission";
 

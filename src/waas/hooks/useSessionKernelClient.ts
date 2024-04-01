@@ -3,10 +3,7 @@ import {
   QueryFunctionContext,
   useQuery,
 } from "@tanstack/react-query";
-import {
-  toPermissionValidator,
-  type Policy,
-} from "@zerodev/permission-validator";
+import { toPermissionValidator } from "@zerodev/permission-validator";
 import { toECDSASigner } from "@zerodev/permission-validator/signers";
 import {
   KernelV3ExecuteAbi,
@@ -26,14 +23,13 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
+import { getSession } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
-import { getPermissionId } from "../utils/mock/getPermissionId";
 import { useAppId } from "./useAppId";
-import { getSessionKey } from "./useSessionPermission";
 import { useValidator } from "./useValidator";
 
 export type UseSessionKernelClientArgs = {
-  policies: Policy[] | undefined;
+  permissionId: `0x${string}` | null | undefined;
 };
 
 export type SessionKernelClientKey = [
@@ -42,7 +38,7 @@ export type SessionKernelClientKey = [
     appId: string | undefined | null;
     validator: KernelValidator<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
-    policies: Policy[] | undefined | null;
+    permissionId: `0x${string}` | null | undefined;
     enableSignature: `0x${string}` | undefined;
   }
 ];
@@ -50,25 +46,29 @@ export type SessionKernelClientKey = [
 async function getSessionKernelClient({
   queryKey,
 }: QueryFunctionContext<SessionKernelClientKey>) {
-  const [_key, { appId, publicClient, policies, validator, enableSignature }] =
-    queryKey;
+  const [
+    _key,
+    { appId, publicClient, permissionId, validator, enableSignature },
+  ] = queryKey;
 
-  if (!policies || !appId) {
+  if (!appId) {
     throw new Error("policies and appId are required");
   }
-  const permissionId = getPermissionId(policies);
-  const sessionKey = getSessionKey(permissionId);
+  if (!permissionId) {
+    throw new Error("permissionId is required");
+  }
+  const session = getSession(permissionId);
 
-  if (!sessionKey) {
+  if (!session) {
     throw new Error("sessionKey not found");
   }
 
-  const sessionSigner = privateKeyToAccount(sessionKey);
+  const sessionSigner = privateKeyToAccount(session.sessionKey);
   const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
   const permissionValidator = await toPermissionValidator(publicClient!, {
     entryPoint: getEntryPoint(),
     signer: ecdsaModularSigner,
-    policies: policies,
+    policies: session.policies,
   });
   const permissionAccount = await createKernelAccount(publicClient!, {
     entryPoint: getEntryPoint(),
@@ -112,23 +112,22 @@ async function getSessionKernelClient({
 }
 
 export function useSessionKernelClient({
-  policies,
+  permissionId,
 }: UseSessionKernelClientArgs) {
   const { appId } = useAppId();
   const client = usePublicClient();
-  const { validator, enableSignature: signature } = useValidator();
-  const policiesKey = JSON.stringify(policies?.map((p) => p.getPolicyData()));
-
-  const enableSignature = signature[getPermissionId(policies)];
+  const { validator } = useValidator();
+  const enableSignature = permissionId
+    ? getSession(permissionId)?.enableSignature
+    : null;
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
       "session_kernel_client",
       {
         publicClient: client,
-        policies,
+        permissionId,
         validator,
-        policiesKey,
         enableSignature,
         appId,
       },

@@ -1,4 +1,4 @@
-import { createSessionKey, setSessionKey, useValidator } from "@/waas";
+import { useSession, useValidator } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
 import {
   toPermissionValidator,
@@ -20,8 +20,8 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
+import { createSessionKey } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
-import { getPermissionId } from "../utils/mock/getPermissionId";
 
 export type CreatePermissionWriteArgs = Policy[] | undefined;
 
@@ -31,13 +31,8 @@ export type UseCreatePermissionKey = {
   client: PublicClient | undefined;
 };
 
-type UseCreatePermissionData = {
-  permissionId: `0x${string}`;
-  enableSignature: `0x${string}`;
-};
-
 export type UseCreatePermissionArgs = {
-  onSuccess?: (data: UseCreatePermissionData) => void;
+  onSuccess?: () => void;
 };
 
 function mutationKey({ ...config }: UseCreatePermissionKey) {
@@ -82,17 +77,20 @@ async function createSessionClient(
       },
     },
   });
+  const smartAccount = permissionAccount.address;
   const pluginEnableSig =
     await permissionAccount.kernelPluginManager.getPluginEnableSignature(
       permissionAccount.address
     );
 
-  const permissionId = getPermissionId(policies);
-  setSessionKey(permissionId, sessionKey);
+  const permissionId = permissionValidator.getPermissionId();
 
   return {
-    permissionId: permissionId,
-    enableSignature: pluginEnableSig,
+    permissionId,
+    smartAccount,
+    pluginEnableSig,
+    policies,
+    sessionKey,
   };
 }
 
@@ -115,6 +113,7 @@ function mutationFn(config: UseCreatePermissionKey) {
 export function useCreatePermission(args?: UseCreatePermissionArgs) {
   const { validator } = useValidator();
   const client = usePublicClient();
+  const { setSession } = useSession();
 
   const {
     data,
@@ -134,7 +133,16 @@ export function useCreatePermission(args?: UseCreatePermissionArgs) {
       policies: undefined,
     }),
     mutationFn,
-    onSuccess: args?.onSuccess,
+    onSuccess: (data) => {
+      setSession(
+        data.permissionId,
+        data.smartAccount,
+        data.pluginEnableSig,
+        data.policies,
+        data.sessionKey
+      );
+      args?.onSuccess?.();
+    },
   });
 
   const write = useMemo(() => {

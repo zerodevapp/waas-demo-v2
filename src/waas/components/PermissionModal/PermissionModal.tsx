@@ -1,8 +1,4 @@
-import {
-  useCreatePermission,
-  useSessionPermission,
-  useValidator,
-} from "@/waas";
+import { useCreatePermission } from "@/waas";
 import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Loader, Modal, Select } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -20,14 +16,13 @@ export default function PermissionModal({
   const [isLoading, setIsLoading] = useState(false);
   const [select, setSelect] = useState<string | null>("");
   const [policyIdx, setPolicyIdx] = useState<number>(0);
-  const { setEnableSignature } = useValidator();
   const { policies } = useMockedPolicy();
-  const { permissions } = useSessionPermission({
-    policies: policies?.[policyIdx].policy,
-  });
+
+  const permissions = policies?.[policyIdx].policy;
   const { write, data, error } = useCreatePermission({
-    onSuccess: (data) =>
-      setEnableSignature(data.permissionId, data.enableSignature),
+    onSuccess: () => {
+      onClose();
+    },
   });
 
   useEffect(() => {

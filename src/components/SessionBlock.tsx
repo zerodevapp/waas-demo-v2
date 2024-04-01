@@ -2,30 +2,25 @@
 import {
   usePermissionModal,
   useSendUserOperationWithSession,
+  useSession,
   useSessionPermission,
   useValidator,
 } from "@/waas";
-import {
-  useMockedPolicy,
-  type PolicyType,
-} from "@/waas/hooks/mock/useMockPolicy";
-import { getPermissionId } from "@/waas/utils/mock/getPermissionId";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
 
-function SessionInfo({ policyWithInfo }: { policyWithInfo: PolicyType }) {
+function SessionInfo({ permissionId }: { permissionId: `0x${string}` }) {
   const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount, enableSignature } = useValidator();
-  const { isExpired } = useSessionPermission({
-    policies: policyWithInfo.policy,
+  const { kernelAccount } = useValidator();
+  const { isExpired, enableSignature, permissions } = useSessionPermission({
+    permissionId,
   });
   const { data, write, error } = useSendUserOperationWithSession({
-    policies: policyWithInfo.policy,
+    permissionId,
   });
   const [mintCalldata, setMintCalldata] = useState<`0x${string}` | null>(null);
-  const signature = enableSignature[getPermissionId(policyWithInfo.policy)];
 
   useEffect(() => {
     if (kernelAccount) {
@@ -39,10 +34,10 @@ function SessionInfo({ policyWithInfo }: { policyWithInfo: PolicyType }) {
   return (
     <>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
-        <p>{`Gas Policy maxGasAllowedInGwei: ${policyWithInfo.maxGasAllowedInWei}`}</p>
+        <p>{`Permission ID: ${permissionId}`}</p>
         <Button
           variant="outline"
-          disabled={(isExpired && !signature) || isLoading || !write}
+          disabled={(isExpired && !enableSignature) || isLoading || !write}
           loading={isExpired === undefined || isLoading}
           onClick={() => {
             setIsLoading(true);
@@ -59,19 +54,18 @@ function SessionInfo({ policyWithInfo }: { policyWithInfo: PolicyType }) {
 
 export default function SessionBlock() {
   const { openPermissionModal } = usePermissionModal();
-  const { policies } = useMockedPolicy();
+  const { session } = useSession();
 
   return (
     <>
       <Title order={3}>Session</Title>
-      {/* <div className="flex flex-row justify-center items-center space-x-4 mt-4"> */}
       <Button variant="outline" onClick={() => openPermissionModal?.()}>
         Set Permission
       </Button>
-      {policies?.map((policy, index) => (
-        <SessionInfo key={index} policyWithInfo={policy} />
-      ))}
-      {/* </div> */}
+      {session &&
+        Object.keys(session).map((pId, index) => (
+          <SessionInfo key={index} permissionId={pId as `0x${string}`} />
+        ))}
     </>
   );
 }

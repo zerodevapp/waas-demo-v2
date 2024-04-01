@@ -1,15 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import { Policy } from "@zerodev/permission-validator";
+import { type Policy } from "@zerodev/permission-validator";
 import {
   type KernelAccountClient,
   type KernelSmartAccount,
 } from "@zerodev/sdk";
 import { type EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
+import { getSession } from "../sessions/manageSession";
 import { useSessionKernelClient } from "./useSessionKernelClient";
 
 export type UseSendUserOperationWithSessionArgs = {
-  policies: Policy[] | undefined;
+  permissionId: `0x${string}` | undefined;
 };
 
 export type SendUserOperationWithSessionWriteArgs = Partial<{
@@ -63,11 +64,13 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 }
 
 export function useSendUserOperationWithSession({
-  policies,
+  permissionId,
 }: UseSendUserOperationWithSessionArgs) {
   const { kernelClient, kernelAccount } = useSessionKernelClient({
-    policies: policies,
+    permissionId: permissionId,
   });
+  const selectedSession = getSession(permissionId);
+  const policies = selectedSession?.policies;
 
   const {
     data,
@@ -83,7 +86,7 @@ export function useSendUserOperationWithSession({
   } = useMutation({
     mutationKey: mutationKey({
       parameters: {},
-      policies,
+      policies: policies,
       kernelClient,
       kernelAccount,
     }),
@@ -91,16 +94,16 @@ export function useSendUserOperationWithSession({
   });
 
   const write = useMemo(() => {
-    if (!policies || !kernelAccount || !kernelClient) return undefined;
+    if (!kernelAccount || !kernelClient) return undefined;
     return (parameters: SendUserOperationWithSessionWriteArgs) => {
       mutate({
         parameters,
-        policies,
+        policies: policies,
         kernelClient,
         kernelAccount,
       });
     };
-  }, [mutate, policies, kernelClient, kernelAccount]);
+  }, [mutate, kernelClient, kernelAccount, policies]);
 
   return {
     data,
