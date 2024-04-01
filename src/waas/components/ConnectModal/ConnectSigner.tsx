@@ -1,5 +1,5 @@
 import { useValidator } from "@/waas";
-import { Button } from "@mantine/core";
+import { Button, Title } from "@mantine/core";
 import { createKernelAccount } from "@zerodev/sdk";
 import { useEffect, useState } from "react";
 import { useAccount, useConnect, usePublicClient } from "wagmi";
@@ -42,22 +42,34 @@ export default function ConnectSigner() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {signerStep === SignerType.None &&
-        connectors.map((connector) => (
-          <div key={connector.uid} className="w-full">
-            <Button
-              onClick={() => {
-                if (!isConnected) connect({ connector });
-                setSignerStep(SignerType.ECDSA);
-              }}
-              fullWidth
-              variant="outline"
-              style={{ justifyContent: "center" }}
-            >
-              {connector.name}
-            </Button>
-          </div>
-        ))}
+      {signerStep === SignerType.None && (
+        <>
+          <Title order={5}>EOA</Title>
+          {connectors.map((connector) => (
+            <div key={connector.uid} className="w-full">
+              <Button
+                onClick={() => {
+                  if (!isConnected) connect({ connector });
+                  setSignerStep(SignerType.ECDSA);
+                }}
+                fullWidth
+                variant="outline"
+                style={{ justifyContent: "center" }}
+              >
+                {connector.name}
+              </Button>
+            </div>
+          ))}
+          <Title order={5}>Passkey</Title>
+          <Button
+            variant="outline"
+            style={{ justifyContent: "center" }}
+            onClick={() => setSignerStep(SignerType.Passkey)}
+          >
+            Use Passkey
+          </Button>
+        </>
+      )}
       {signerStep === SignerType.ECDSA && <ECDSASigner />}
       {signerStep === SignerType.Passkey && <PasskeySigner />}
     </div>

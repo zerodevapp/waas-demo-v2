@@ -19,3 +19,5 @@ export { useSessionPermission } from "./hooks/useSessionPermission";
 export { useCreatePermission } from "./hooks/useCreatePermission";
 
 export { useSession } from "./hooks/useSession";
+
+export { useAppId } from "./hooks/useAppId";

@@ -18,10 +18,10 @@ export function useMockedPolicy() {
     const getMockPolicy = async () => {
       const gasPolicyMeta = ["1000000000", "100000000"];
       const firstGasPolicy = await toGasPolicy({
-        maxGasAllowedInWei: parseGwei(gasPolicyMeta[0]),
+        allowed: parseGwei(gasPolicyMeta[0]),
       });
       const secondGasPolicy = await toGasPolicy({
-        maxGasAllowedInWei: parseGwei(gasPolicyMeta[1]),
+        allowed: parseGwei(gasPolicyMeta[1]),
       });
       const sudoPolicy = await toSudoPolicy({});
       const firstPolicies = {
