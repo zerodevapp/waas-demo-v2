@@ -1,4 +1,4 @@
-import { useAppId, useValidator } from "@/waas";
+import { useAppId, useKernelAccount } from "@/waas";
 import {
   QueryFunction,
   QueryFunctionContext,
@@ -61,7 +61,7 @@ async function getKernelClient({
 
 export function useKernelClient() {
   const { appId } = useAppId();
-  const { kernelAccount } = useValidator();
+  const { kernelAccount } = useKernelAccount();
   const client = usePublicClient();
 
   const { data, isLoading, error } = useQuery({

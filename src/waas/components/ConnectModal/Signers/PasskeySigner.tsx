@@ -1,4 +1,4 @@
-import { useAppId, useValidator } from "@/waas";
+import { useAppId, useKernelAccount } from "@/waas";
 import { getEntryPoint } from "@/waas/utils/entryPoint";
 import { Button, Flex, TextInput } from "@mantine/core";
 import {
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { usePublicClient } from "wagmi";
 
 export default function PasskeySigner() {
-  const { setValidator } = useValidator();
+  const { setValidator } = useKernelAccount();
   const { appId } = useAppId();
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);

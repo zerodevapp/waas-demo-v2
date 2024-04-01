@@ -26,8 +26,8 @@ import { sepolia } from "wagmi/chains";
 import { type SessionType } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
+import { useKernelAccount } from "./useKernelAccount";
 import { useSession } from "./useSession";
-import { useValidator } from "./useValidator";
 
 export type UseSessionKernelClientArgs = {
   permissionId: `0x${string}` | null | undefined;
@@ -118,7 +118,7 @@ export function useSessionKernelClient({
 }: UseSessionKernelClientArgs) {
   const { appId } = useAppId();
   const client = usePublicClient();
-  const { validator } = useValidator();
+  const { validator } = useKernelAccount();
   const { session } = useSession();
 
   const { data, isLoading, error } = useQuery({

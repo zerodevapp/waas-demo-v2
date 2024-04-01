@@ -1,8 +1,8 @@
-import { useConnectModal, useValidator } from "@/waas";
+import { useConnectModal, useKernelAccount } from "@/waas";
 import { Button } from "@mantine/core";
 
 export function ConnectButton() {
-  const { kernelAccount, setValidator, setKernelAccount } = useValidator();
+  const { kernelAccount, setValidator, setKernelAccount } = useKernelAccount();
   const { openConnectModal } = useConnectModal();
 
   return (

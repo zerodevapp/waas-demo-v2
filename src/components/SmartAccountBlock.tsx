@@ -1,11 +1,11 @@
 "use client";
-import { ConnectButton, useSendUserOperation, useValidator } from "@/waas";
+import { ConnectButton, useKernelAccount, useSendUserOperation } from "@/waas";
 import { Button, Loader, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 export default function SmartAccountBlock() {
   const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount } = useValidator();
+  const { kernelAccount } = useKernelAccount();
   const { data, write, error } = useSendUserOperation();
   const [mintCalldata, setMintCalldata] = useState<`0x${string}` | null>(null);
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";

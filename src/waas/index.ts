@@ -2,7 +2,7 @@ export { ZeroDevWaasProvider } from "./components/ZeroDevProvider/ZeroDevWaasPro
 
 export { ConnectButton } from "./components/ConnectButton/ConnectButton";
 
-export { useValidator } from "./hooks/useValidator";
+export { useKernelAccount } from "./hooks/useKernelAccount";
 
 export { useConnectModal } from "./hooks/useConnectModal";
 

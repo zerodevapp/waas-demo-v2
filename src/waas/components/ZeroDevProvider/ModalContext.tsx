@@ -1,4 +1,4 @@
-import { useValidator } from "@/waas";
+import { useKernelAccount } from "@/waas";
 import {
   ReactNode,
   createContext,
@@ -12,7 +12,7 @@ import { PermissionModal } from "../PermissionModal";
 
 export function useModalStateValue() {
   const [isModalOpen, setModalOpen] = useState(false);
-  const { validator, setValidator, kernelAccount } = useValidator();
+  const { validator, setValidator, kernelAccount } = useKernelAccount();
 
   return {
     closeModal: useCallback(() => {
@@ -41,7 +41,7 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const { kernelAccount, validator } = useValidator();
+  const { kernelAccount, validator } = useKernelAccount();
 
   const {
     closeModal: closeConnectModal,

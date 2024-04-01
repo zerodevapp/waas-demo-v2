@@ -1,4 +1,4 @@
-import { useValidator } from "@/waas";
+import { useKernelAccount } from "@/waas";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import type { Config } from "@wagmi/core";
 import { type Evaluate, type UnionOmit } from "@wagmi/core/internal";
@@ -116,7 +116,7 @@ export function useSendUserOperation<
   config extends Config = ResolvedRegister["config"],
   context = unknown
 >() {
-  const { kernelAccount } = useValidator();
+  const { kernelAccount } = useKernelAccount();
   const { appId } = useAppId();
 
   const {

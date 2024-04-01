@@ -13,7 +13,7 @@ import { type EntryPoint } from "permissionless/types";
 import { PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
-import { useValidator } from "..";
+import { useKernelAccount } from "..";
 import { getSession } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
 
@@ -94,7 +94,7 @@ async function fetchPermission({
 export function useSessionPermission({
   permissionId,
 }: useSessionPermissionArgs): useSessionPermissionRes {
-  const { validator } = useValidator();
+  const { validator } = useKernelAccount();
   const client = usePublicClient();
 
   const {

@@ -1,11 +1,11 @@
 "use client";
 import {
+  useKernelAccount,
   useKernelClient,
   usePermissionModal,
   useSendUserOperationWithSession,
   useSession,
   useSessionPermission,
-  useValidator,
 } from "@/waas";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -14,7 +14,7 @@ const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
 
 function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
   const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount } = useValidator();
+  const { kernelAccount } = useKernelAccount();
   const { isExpired, enableSignature, permissions } = useSessionPermission({
     permissionId,
   });

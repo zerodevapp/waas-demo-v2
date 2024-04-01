@@ -1,10 +1,10 @@
 "use client";
 import SessionBlock from "@/components/SessionBlock";
 import SmartAccountBlock from "@/components/SmartAccountBlock";
-import { ConnectButton, useValidator } from "@/waas";
+import { ConnectButton, useKernelAccount } from "@/waas";
 
 export default function Home() {
-  const { kernelAccount } = useValidator();
+  const { kernelAccount } = useKernelAccount();
 
   return (
     <div className="flex flex-col justify-center items-center h-screen">

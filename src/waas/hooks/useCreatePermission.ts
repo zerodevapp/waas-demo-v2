@@ -1,4 +1,4 @@
-import { useSession, useValidator } from "@/waas";
+import { useKernelAccount, useSession } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
 import {
   toPermissionValidator,
@@ -111,7 +111,7 @@ function mutationFn(config: UseCreatePermissionKey) {
 }
 
 export function useCreatePermission(args?: UseCreatePermissionArgs) {
-  const { validator } = useValidator();
+  const { validator } = useKernelAccount();
   const client = usePublicClient();
   const { setSession } = useSession();
 

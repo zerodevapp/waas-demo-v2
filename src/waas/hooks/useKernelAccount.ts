@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { ZeroDevValidatorContext } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 
-export function useValidator() {
+export function useKernelAccount() {
   const { validator, setValidator, kernelAccount, setKernelAccount } =
     useContext(ZeroDevValidatorContext);
 
@@ -10,5 +10,6 @@ export function useValidator() {
     setValidator,
     kernelAccount,
     setKernelAccount,
+    isConnected: !!kernelAccount,
   };
 }
