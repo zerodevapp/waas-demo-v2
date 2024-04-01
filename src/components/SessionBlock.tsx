@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 
 const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
 
-function SessionInfo({ permissionId }: { permissionId: `0x${string}` }) {
+function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
   const [isLoading, setIsLoading] = useState(false);
   const { kernelAccount } = useValidator();
   const { isExpired, enableSignature, permissions } = useSessionPermission({
@@ -34,11 +34,11 @@ function SessionInfo({ permissionId }: { permissionId: `0x${string}` }) {
   return (
     <>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
-        <p>{`Permission ID: ${permissionId}`}</p>
+        {permissionId && <p>{`Permission ID: ${permissionId}`}</p>}
         <Button
           variant="outline"
-          disabled={(isExpired && !enableSignature) || isLoading || !write}
-          loading={isExpired === undefined || isLoading}
+          disabled={isLoading || !write}
+          loading={isLoading || (permissionId && isExpired === undefined)}
           onClick={() => {
             setIsLoading(true);
             write?.({ to: nftAddress, value: 0n, data: mintCalldata! });
@@ -62,6 +62,9 @@ export default function SessionBlock() {
       <Button variant="outline" onClick={() => openPermissionModal?.()}>
         Set Permission
       </Button>
+      <Title order={5}>Send UserOp without providing a permissionId</Title>
+      {session && <SessionInfo />}
+      <Title order={5}>Send UserOp with permissionId</Title>
       {session &&
         Object.keys(session).map((pId, index) => (
           <SessionInfo key={index} permissionId={pId as `0x${string}`} />

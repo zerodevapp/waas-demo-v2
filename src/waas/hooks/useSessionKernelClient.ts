@@ -23,9 +23,10 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { getSession } from "../sessions/manageSession";
+import { type SessionType } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
+import { useSession } from "./useSession";
 import { useValidator } from "./useValidator";
 
 export type UseSessionKernelClientArgs = {
@@ -39,36 +40,37 @@ export type SessionKernelClientKey = [
     validator: KernelValidator<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
     permissionId: `0x${string}` | null | undefined;
-    enableSignature: `0x${string}` | undefined;
+    session: SessionType | undefined;
   }
 ];
 
 async function getSessionKernelClient({
   queryKey,
 }: QueryFunctionContext<SessionKernelClientKey>) {
-  const [
-    _key,
-    { appId, publicClient, permissionId, validator, enableSignature },
-  ] = queryKey;
-
-  if (!appId) {
-    throw new Error("policies and appId are required");
-  }
-  if (!permissionId) {
-    throw new Error("permissionId is required");
-  }
-  const session = getSession(permissionId);
+  const [_key, { appId, publicClient, permissionId, validator, session }] =
+    queryKey;
 
   if (!session) {
-    throw new Error("sessionKey not found");
+    throw new Error("session not found");
+  }
+  const sessionLength = Object.keys(session).length;
+  if (sessionLength === 0) {
+    throw new Error("session not found");
   }
 
-  const sessionSigner = privateKeyToAccount(session.sessionKey);
+  if (sessionLength > 1 && !permissionId) {
+    throw new Error("permissionId is required");
+  }
+  const id = Object.keys(session)[0] as `0x${string}`;
+  const selectedSession =
+    sessionLength === 1 ? session[id] : session[permissionId!];
+
+  const sessionSigner = privateKeyToAccount(selectedSession.sessionKey);
   const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
   const permissionValidator = await toPermissionValidator(publicClient!, {
     entryPoint: getEntryPoint(),
     signer: ecdsaModularSigner,
-    policies: session.policies,
+    policies: selectedSession.policies,
   });
   const permissionAccount = await createKernelAccount(publicClient!, {
     entryPoint: getEntryPoint(),
@@ -82,14 +84,14 @@ async function getSessionKernelClient({
           getAbiItem({ abi: KernelV3ExecuteAbi, name: "execute" })
         ),
       },
-      pluginEnableSignature: enableSignature,
+      pluginEnableSignature: selectedSession.enableSignature,
     },
   });
   const kernelClient = createKernelAccountClient({
     account: permissionAccount,
     chain: sepolia,
     bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
+      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
     ),
     entryPoint: getEntryPoint(),
     middleware: {
@@ -98,7 +100,7 @@ async function getSessionKernelClient({
           entryPoint: getEntryPoint(),
           chain: sepolia,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
+            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId!}?paymasterProvider=PIMLICO`
           ),
         });
         return kernelPaymaster.sponsorUserOperation({
@@ -117,9 +119,7 @@ export function useSessionKernelClient({
   const { appId } = useAppId();
   const client = usePublicClient();
   const { validator } = useValidator();
-  const enableSignature = permissionId
-    ? getSession(permissionId)?.enableSignature
-    : null;
+  const { session } = useSession();
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
@@ -128,7 +128,7 @@ export function useSessionKernelClient({
         publicClient: client,
         permissionId,
         validator,
-        enableSignature,
+        session,
         appId,
       },
     ],

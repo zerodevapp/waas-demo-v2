@@ -10,7 +10,7 @@ import { getSession } from "../sessions/manageSession";
 import { useSessionKernelClient } from "./useSessionKernelClient";
 
 export type UseSendUserOperationWithSessionArgs = {
-  permissionId: `0x${string}` | undefined;
+  permissionId?: `0x${string}` | undefined;
 };
 
 export type SendUserOperationWithSessionWriteArgs = Partial<{
@@ -66,7 +66,11 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 export function useSendUserOperationWithSession({
   permissionId,
 }: UseSendUserOperationWithSessionArgs) {
-  const { kernelClient, kernelAccount } = useSessionKernelClient({
+  const {
+    kernelClient,
+    kernelAccount,
+    error: clientError,
+  } = useSessionKernelClient({
     permissionId: permissionId,
   });
   const selectedSession = getSession(permissionId);
@@ -107,7 +111,7 @@ export function useSendUserOperationWithSession({
 
   return {
     data,
-    error,
+    error: error || clientError,
     isError,
     isIdle,
     isSuccess,
