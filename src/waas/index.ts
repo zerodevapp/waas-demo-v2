@@ -22,3 +22,5 @@ export {
 } from "./hooks/useSessionPermission";
 
 export { useCreatePermission } from "./hooks/useCreatePermission";
+
+export { useSession } from "./hooks/useSession";

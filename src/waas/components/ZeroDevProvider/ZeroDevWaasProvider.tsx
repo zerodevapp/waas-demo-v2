@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { ModalProvider } from "./ModalContext";
+import { SessionProvider } from "./SessionContext";
 import { ZeroDevAppProvider } from "./ZeroDevAppContext";
 import { ZeroDevValidatorProvider } from "./ZeroDevValidatorContext";
 
@@ -15,7 +16,9 @@ export function ZeroDevWaasProvider({
   return (
     <ZeroDevAppProvider appId={appId}>
       <ZeroDevValidatorProvider>
-        <ModalProvider>{children}</ModalProvider>
+        <SessionProvider>
+          <ModalProvider>{children}</ModalProvider>
+        </SessionProvider>
       </ZeroDevValidatorProvider>
     </ZeroDevAppProvider>
   );
