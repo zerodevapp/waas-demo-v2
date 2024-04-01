@@ -25,3 +25,5 @@ export { useAppId } from "./hooks/useAppId";
 export { useKernelClient } from "./hooks/useKernelClient";
 
 export { useCreateKernelClientEOA } from "./hooks/useCreateKernelClientEOA";
+
+export { useCreateKernelClientPasskey } from "./hooks/useCreateKernelClientPasskey";

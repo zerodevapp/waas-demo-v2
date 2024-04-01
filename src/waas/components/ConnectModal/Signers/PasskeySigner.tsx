@@ -1,57 +1,18 @@
-import { useAppId, useKernelAccount } from "@/waas";
-import { getEntryPoint } from "@/waas/utils/entryPoint";
+import { useCreateKernelClientPasskey } from "@/waas";
 import { Button, Flex, TextInput } from "@mantine/core";
-import {
-  WEBAUTHN_VALIDATOR_ADDRESS_V07,
-  createPasskeyValidator,
-  getPasskeyValidator,
-} from "@zerodev/passkey-validator";
 import { useEffect, useState } from "react";
-import { usePublicClient } from "wagmi";
 
 export default function PasskeySigner() {
-  const { setValidator } = useKernelAccount();
-  const { appId } = useAppId();
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const client = usePublicClient();
+  const { connectRegister, connectLogin, error } =
+    useCreateKernelClientPasskey();
 
   useEffect(() => {
     setIsRegistering(false);
     setIsLoggingIn(false);
-  }, []);
-
-  const handleRegister = async () => {
-    setIsRegistering(true);
-
-    try {
-      const passkeyValidator = await createPasskeyValidator(client!, {
-        passkeyName: username,
-        passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId!}`,
-        entryPoint: getEntryPoint(),
-        validatorAddress: WEBAUTHN_VALIDATOR_ADDRESS_V07,
-      });
-      setValidator(passkeyValidator);
-    } catch (err) {
-      setIsRegistering(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    setIsLoggingIn(true);
-
-    try {
-      const passkeyValidator = await getPasskeyValidator(client!, {
-        passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId!}`,
-        entryPoint: getEntryPoint(),
-        validatorAddress: WEBAUTHN_VALIDATOR_ADDRESS_V07,
-      });
-      setValidator(passkeyValidator);
-    } catch (err) {
-      setIsLoggingIn(false);
-    }
-  };
+  }, [error]);
 
   return (
     <Flex justify="between" align="center" style={{ width: "100%" }}>
@@ -71,8 +32,11 @@ export default function PasskeySigner() {
           variant="outline"
           style={{ padding: "3px" }}
           loading={isRegistering}
-          disabled={isRegistering || !client || !username || !appId}
-          onClick={() => handleRegister()}
+          disabled={isRegistering || !username}
+          onClick={() => {
+            setIsRegistering(true);
+            connectRegister({ username });
+          }}
         >
           Register
         </Button>
@@ -83,8 +47,11 @@ export default function PasskeySigner() {
           variant="outline"
           style={{ marginLeft: "3px", padding: "3px" }}
           loading={isLoggingIn}
-          disabled={isLoggingIn || !appId}
-          onClick={() => handleLogin()}
+          disabled={isLoggingIn}
+          onClick={() => {
+            setIsLoggingIn(true);
+            connectLogin();
+          }}
         >
           Login
         </Button>
