@@ -1,9 +1,7 @@
-import { useValidator } from "@/waas";
+import { useCreateKernelClientEOA } from "@/waas";
 import { Button, Title } from "@mantine/core";
-import { createKernelAccount } from "@zerodev/sdk";
 import { useEffect, useState } from "react";
-import { useAccount, useConnect, usePublicClient } from "wagmi";
-import { getEntryPoint } from "../../utils/entryPoint";
+import { useConnect } from "wagmi";
 import ECDSASigner from "./Signers/ECDSASigner";
 import PasskeySigner from "./Signers/PasskeySigner";
 
@@ -14,31 +12,13 @@ export enum SignerType {
 }
 
 export default function ConnectSigner() {
-  const { connectors, connect, error } = useConnect();
+  const { connectors, error } = useConnect();
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
-  const { validator, setKernelAccount } = useValidator();
-  const client = usePublicClient();
-  const { isConnected } = useAccount();
+  const { connect } = useCreateKernelClientEOA();
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);
   }, [error]);
-
-  useEffect(() => {
-    const handleCreateAccount = async () => {
-      if (client && validator) {
-        const account = await createKernelAccount(client, {
-          entryPoint: getEntryPoint(),
-          plugins: {
-            sudo: validator,
-            entryPoint: getEntryPoint(),
-          },
-        });
-        setKernelAccount(account);
-      }
-    };
-    handleCreateAccount();
-  }, [client, validator, setKernelAccount]);
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -49,7 +29,7 @@ export default function ConnectSigner() {
             <div key={connector.uid} className="w-full">
               <Button
                 onClick={() => {
-                  if (!isConnected) connect({ connector });
+                  connect({ connector });
                   setSignerStep(SignerType.ECDSA);
                 }}
                 fullWidth

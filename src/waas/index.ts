@@ -23,3 +23,5 @@ export { useSession } from "./hooks/useSession";
 export { useAppId } from "./hooks/useAppId";
 
 export { useKernelClient } from "./hooks/useKernelClient";
+
+export { useCreateKernelClientEOA } from "./hooks/useCreateKernelClientEOA";
