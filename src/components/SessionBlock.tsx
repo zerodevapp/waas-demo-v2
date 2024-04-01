@@ -1,5 +1,6 @@
 "use client";
 import {
+  useKernelClient,
   usePermissionModal,
   useSendUserOperationWithSession,
   useSession,
@@ -55,6 +56,8 @@ function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
 export default function SessionBlock() {
   const { openPermissionModal } = usePermissionModal();
   const { session } = useSession();
+  const { kernelAccount } = useKernelClient();
+  const accountAddress = kernelAccount?.address;
 
   return (
     <>
@@ -66,9 +69,14 @@ export default function SessionBlock() {
       {session && <SessionInfo />}
       <Title order={5}>Send UserOp with permissionId</Title>
       {session &&
-        Object.keys(session).map((pId, index) => (
-          <SessionInfo key={index} permissionId={pId as `0x${string}`} />
-        ))}
+        Object.keys(session)
+          .filter(
+            (pId) =>
+              session[pId as `0x${string}`].smartAccount === accountAddress
+          )
+          .map((pId, index) => (
+            <SessionInfo key={index} permissionId={pId as `0x${string}`} />
+          ))}
     </>
   );
 }
