@@ -6,7 +6,7 @@ export { useKernelAccount } from "./hooks/useKernelAccount";
 
 export { useConnectModal } from "./hooks/useConnectModal";
 
-export { usePermissionModal } from "./hooks/usePermissionModal";
+export { useSessionModal } from "./hooks/useSessionModal";
 
 export { useSendUserOperation } from "./hooks/useSendUserOperation";
 

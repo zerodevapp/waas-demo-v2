@@ -2,11 +2,12 @@
 import {
   useKernelAccount,
   useKernelClient,
-  usePermissionModal,
   useSendUserOperationWithSession,
+  useSessionModal,
   useSessionPermission,
   useSessions,
 } from "@/waas";
+import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 
@@ -54,15 +55,24 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
 }
 
 export default function SessionBlock() {
-  const { openPermissionModal } = usePermissionModal();
+  const { openSessionModal } = useSessionModal();
   const sessions = useSessions();
   const { kernelAccount } = useKernelClient();
   const accountAddress = kernelAccount?.address;
+  const { policies: p } = useMockedPolicy();
 
   return (
     <>
       <Title order={3}>Session</Title>
-      <Button variant="outline" onClick={() => openPermissionModal?.()}>
+      <Button
+        variant="outline"
+        disabled={!p}
+        onClick={() =>
+          openSessionModal?.({
+            policies: p?.[0].policy,
+          })
+        }
+      >
         Set Permission
       </Button>
       <Title order={5}>Send UserOp without providing a sessionId</Title>

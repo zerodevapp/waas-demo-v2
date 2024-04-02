@@ -1,4 +1,5 @@
 import { useKernelAccount } from "@/waas";
+import { type Policy } from "@zerodev/permission-validator";
 import {
   ReactNode,
   createContext,
@@ -8,17 +9,16 @@ import {
   useState,
 } from "react";
 import { ConnectModal } from "../ConnectModal/ConnectModal";
-import { PermissionModal } from "../PermissionModal";
+import { SessionModal } from "../SessionModal";
 
 export function useModalStateValue() {
   const [isModalOpen, setModalOpen] = useState(false);
-  const { validator, setValidator, kernelAccount } = useKernelAccount();
 
   return {
     closeModal: useCallback(() => {
       setModalOpen(false);
       // if (validator && !kernelAccount) setValidator(null);
-    }, [validator, setValidator, kernelAccount]),
+    }, []),
     isModalOpen,
     openModal: useCallback(() => setModalOpen(true), []),
   };
@@ -27,13 +27,13 @@ export function useModalStateValue() {
 interface ModalContextValue {
   connectModalOpen: boolean;
   openConnectModal?: () => void;
-  permissionModalOpen: boolean;
-  openPermissionModal?: () => void;
+  sessionModalOpen: boolean;
+  openSessionModal?: ({ policies }: { policies: Policy[] | undefined }) => void;
 }
 
 export const ModalContext = createContext<ModalContextValue>({
   connectModalOpen: false,
-  permissionModalOpen: false,
+  sessionModalOpen: false,
 });
 
 interface ModalProviderProps {
@@ -42,6 +42,7 @@ interface ModalProviderProps {
 
 export function ModalProvider({ children }: ModalProviderProps) {
   const { kernelAccount, validator } = useKernelAccount();
+  const [policies, setPolicies] = useState<Policy[]>([]);
 
   const {
     closeModal: closeConnectModal,
@@ -49,16 +50,24 @@ export function ModalProvider({ children }: ModalProviderProps) {
     openModal: openConnectModal,
   } = useModalStateValue();
   const {
-    closeModal: closePermissionModal,
-    isModalOpen: permissionModalOpen,
-    openModal: openPermissionModal,
+    closeModal: closeSessionModal,
+    isModalOpen: sessionModalOpen,
+    openModal: openSessionModal,
   } = useModalStateValue();
 
   useEffect(() => {
     if (kernelAccount) {
       closeConnectModal();
     }
-  }, [kernelAccount, validator]);
+  }, [kernelAccount, closeConnectModal]);
+
+  const openSessionModalWithPolicy = useCallback(
+    ({ policies }: { policies: Policy[] | undefined }) => {
+      setPolicies(policies || []);
+      openSessionModal();
+    },
+    [openSessionModal]
+  );
 
   return (
     <ModalContext.Provider
@@ -66,17 +75,23 @@ export function ModalProvider({ children }: ModalProviderProps) {
         () => ({
           connectModalOpen,
           openConnectModal,
-          permissionModalOpen,
-          openPermissionModal,
+          sessionModalOpen,
+          openSessionModal: openSessionModalWithPolicy,
         }),
-        [connectModalOpen, openConnectModal]
+        [
+          connectModalOpen,
+          openConnectModal,
+          sessionModalOpen,
+          openSessionModalWithPolicy,
+        ]
       )}
     >
       {children}
       <ConnectModal onClose={closeConnectModal} open={connectModalOpen} />
-      <PermissionModal
-        onClose={closePermissionModal}
-        open={permissionModalOpen}
+      <SessionModal
+        onClose={closeSessionModal}
+        open={sessionModalOpen}
+        policies={policies}
       />
     </ModalContext.Provider>
   );
