@@ -16,16 +16,12 @@ export default function SessionModal({
 }: SessionModalProps) {
   const titleId = "Session";
   const [isLoading, setIsLoading] = useState(false);
-
-  const { write, data, error } = useCreateSession({
-    onSuccess: () => {
-      onClose();
-    },
-  });
+  const { write, data, error } = useCreateSession();
 
   useEffect(() => {
+    if (data) onClose();
     setIsLoading(false);
-  }, [open, error]);
+  }, [data, error, onClose]);
 
   return (
     <Modal

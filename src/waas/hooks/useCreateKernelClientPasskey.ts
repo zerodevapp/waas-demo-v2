@@ -44,7 +44,7 @@ async function mutationFn(config: UseCreateKernelClientPasskeyKey) {
   const { username, publicClient, appId, type } = config;
 
   if (!publicClient || !appId) {
-    throw new Error("missing username, publicClient, or appId");
+    throw new Error("missing publicClient or appId");
   }
   let passkeyValidator: KernelValidator<EntryPoint>;
 
@@ -82,18 +82,7 @@ export function useCreateKernelClientPasskey() {
   const { appId } = useAppId();
   const client = usePublicClient();
 
-  const {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
-  } = useMutation({
+  const { data, mutate, ...result } = useMutation({
     mutationKey: mutationKey({
       appId: appId,
       publicClient: client,
@@ -131,16 +120,9 @@ export function useCreateKernelClientPasskey() {
   }, [data, setValidator, setKernelAccount]);
 
   return {
+    ...result,
     data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
     mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
     connectRegister,
     connectLogin,
   };

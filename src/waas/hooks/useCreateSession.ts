@@ -32,10 +32,6 @@ export type UseCreateSessionKey = {
   client: PublicClient | undefined;
 };
 
-export type UseCreateSessionArgs = {
-  onSuccess?: () => void;
-};
-
 function mutationKey({ ...config }: UseCreateSessionKey) {
   const { policies, client, validator } = config;
 
@@ -56,7 +52,7 @@ async function mutationFn(config: UseCreateSessionKey) {
     throw new Error("No validator provided");
   }
   if (!policies) {
-    throw new Error("No parameters provided");
+    throw new Error("No policies provided");
   }
   if (!client) {
     throw new Error("No client provided");
@@ -103,23 +99,12 @@ async function mutationFn(config: UseCreateSessionKey) {
   };
 }
 
-export function useCreateSession(args?: UseCreateSessionArgs) {
+export function useCreateSession() {
   const { validator } = useKernelAccount();
   const client = usePublicClient();
   const { updateSession } = useUpdateSession();
 
-  const {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
-  } = useMutation({
+  const { mutate, ...result } = useMutation({
     mutationKey: mutationKey({
       client,
       validator,
@@ -128,7 +113,6 @@ export function useCreateSession(args?: UseCreateSessionArgs) {
     mutationFn,
     onSuccess: (data) => {
       updateSession(data);
-      args?.onSuccess?.();
     },
   });
 
@@ -143,14 +127,7 @@ export function useCreateSession(args?: UseCreateSessionArgs) {
   }, [mutate, validator, client]);
 
   return {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    reset,
-    status,
-    variables,
+    ...result,
     write,
   };
 }

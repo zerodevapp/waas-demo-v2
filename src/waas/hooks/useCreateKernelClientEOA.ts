@@ -63,18 +63,7 @@ export function useCreateKernelClientEOA() {
   const config = useConfig();
   const client = usePublicClient();
 
-  const {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
-  } = useMutation({
+  const { data, mutate, ...result } = useMutation({
     mutationKey: mutationKey({
       wagmiConfig: config,
       connector: undefined,
@@ -84,7 +73,6 @@ export function useCreateKernelClientEOA() {
   });
 
   const connect = useMemo(() => {
-    // if (!config) return undefined;
     return ({ connector }: CreateKernelClientEOAArgs) =>
       mutate({
         connector,
@@ -101,16 +89,9 @@ export function useCreateKernelClientEOA() {
   }, [data, setValidator, setKernelAccount]);
 
   return {
+    ...result,
     data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
     mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
     connect,
   };
 }
