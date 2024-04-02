@@ -41,6 +41,7 @@ export type SessionKernelClientKey = [
   params: {
     appId: string | undefined | null;
     validator: KernelValidator<EntryPoint> | undefined | null;
+    kernelAddress: string | undefined | null;
     publicClient: PublicClient | undefined | null;
     sessionId: `0x${string}` | null | undefined;
     session: SessionType | undefined;
@@ -50,24 +51,27 @@ export type SessionKernelClientKey = [
 async function getSessionKernelClient({
   queryKey,
 }: QueryFunctionContext<SessionKernelClientKey>) {
-  const [_key, { appId, publicClient, sessionId, validator, session }] =
-    queryKey;
+  const [
+    _key,
+    { appId, publicClient, sessionId, validator, session, kernelAddress },
+  ] = queryKey;
 
+  // get session from sessionId
   if (!session) {
     throw new Error("session not found");
   }
-  const sessionLength = Object.keys(session).length;
-  if (sessionLength === 0) {
-    throw new Error("session not found");
+  const accountSession = Object.values(session).filter(
+    (s) => s.smartAccount === kernelAddress
+  );
+  if (accountSession.length === 0) {
+    throw new Error("No available session for this account");
   }
-
-  if (sessionLength > 1 && !sessionId) {
+  if (accountSession.length > 1 && !sessionId) {
     throw new Error("sessionId is required");
   }
-  const id = Object.keys(session)[0] as `0x${string}`;
-  const selectedSession =
-    sessionLength === 1 ? session[id] : session[sessionId!];
+  const selectedSession = sessionId ? session[sessionId] : accountSession[0];
 
+  // create kernelAccountClient
   const sessionSigner = privateKeyToAccount(selectedSession.sessionKey);
   const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
   const permissionValidator = await toPermissionValidator(publicClient!, {
@@ -132,14 +136,16 @@ export function useSessionKernelClient({
 }: UseSessionKernelClientArgs) {
   const { appId } = useAppId();
   const client = usePublicClient();
-  const { validator } = useKernelAccount();
+  const { validator, kernelAccount } = useKernelAccount();
   const session = useSessions();
+  const kernelAddress = kernelAccount?.address;
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
       "session_kernel_client",
       {
         publicClient: client,
+        kernelAddress,
         sessionId,
         validator,
         session,
@@ -147,7 +153,7 @@ export function useSessionKernelClient({
       },
     ],
     queryFn: getSessionKernelClient as unknown as QueryFunction<any>,
-    enabled: !!client && !!validator && !!appId,
+    enabled: !!client && !!validator && !!appId && !!kernelAddress,
   });
 
   return {

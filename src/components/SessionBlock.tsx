@@ -53,34 +53,38 @@ export default function SessionBlock() {
   const sessions = useSessions();
   const { kernelAccount } = useKernelClient();
   const accountAddress = kernelAccount?.address;
-  const { policies: p } = useMockedPolicy();
+  const { policies } = useMockedPolicy();
+  const accountSession =
+    sessions &&
+    Object.keys(sessions).filter(
+      (sId) => sessions[sId as `0x${string}`].smartAccount === accountAddress
+    );
+  const isSession = accountSession && accountSession.length > 0;
 
   return (
     <>
       <Title order={3}>Session</Title>
       <Button
         variant="outline"
-        disabled={!p}
+        disabled={!policies}
         onClick={() =>
           openSessionModal?.({
-            policies: p?.[0].policy,
+            policies: policies?.[0].policy,
           })
         }
       >
         Set Permission
       </Button>
-      <Title order={5}>Send UserOp without providing a sessionId</Title>
-      {sessions && <SessionInfo />}
-      <Title order={5}>Send UserOp with sessionId</Title>
-      {sessions &&
-        Object.keys(sessions)
-          .filter(
-            (sId) =>
-              sessions[sId as `0x${string}`].smartAccount === accountAddress
-          )
-          .map((sId, index) => (
+      {isSession && (
+        <>
+          <Title order={5}>Send UserOp without providing a sessionId</Title>
+          <SessionInfo />
+          <Title order={5}>Send UserOp with sessionId</Title>
+          {accountSession?.map((sId, index) => (
             <SessionInfo key={index} sessionId={sId as `0x${string}`} />
           ))}
+        </>
+      )}
     </>
   );
 }
