@@ -1,164 +1,80 @@
-import { useKernelAccount } from "@/waas";
-import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import { useKernelClient } from "@/waas";
+import { useMutation } from "@tanstack/react-query";
 import type { Config } from "@wagmi/core";
-import { type Evaluate, type UnionOmit } from "@wagmi/core/internal";
-import {
-  createKernelAccountClient,
-  createZeroDevPaymasterClient,
-  KernelSmartAccount,
-} from "@zerodev/sdk";
+import { type WriteContractParameters } from "@wagmi/core";
+import { KernelAccountClient, KernelSmartAccount } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import { http, type Hash } from "viem";
+import { encodeFunctionData } from "viem";
 import { ResolvedRegister } from "wagmi";
-import { sepolia } from "wagmi/chains";
-import { getEntryPoint } from "../utils/entryPoint";
-import { useAppId } from "./useAppId";
 
-export type ConfigParameter<config extends Config = Config> = {
-  config?: Config | config | undefined;
-};
-
-export type UseMutationReturnType<
-  data = unknown,
-  error = Error,
-  variables = void,
-  context = unknown
-> = Evaluate<
-  UnionOmit<
-    UseMutationResult<data, error, variables, context>,
-    "mutate" | "mutateAsync"
-  >
->;
-
-export type UseSendUserOperationReturnType<
-  config extends Config = Config,
-  context = unknown
-> = Hash;
+export type SendUserOperationWriteArgs = WriteContractParameters;
 
 export type UseSendUserOperationArgs = {
   parameters: SendUserOperationWriteArgs;
-  appId: string | null;
-  account: KernelSmartAccount<EntryPoint> | null;
+  kernelClient: KernelAccountClient<EntryPoint> | null;
+  kernelAccount: KernelSmartAccount<EntryPoint> | null;
 };
 
 function mutationKey({ ...config }: UseSendUserOperationArgs) {
-  const { account, appId, parameters } = config;
+  const { kernelAccount, kernelClient, parameters } = config;
 
   return [
     {
       entity: "sendUserOperation",
-      account,
-      appId,
+      kernelAccount,
+      kernelClient,
       parameters,
     },
   ] as const;
 }
 
 async function mutationFn(config: UseSendUserOperationArgs) {
-  const { account, appId, parameters } = config;
-  const { to, value, data } = parameters;
+  const { kernelAccount, kernelClient, parameters } = config;
 
-  if (!account) {
-    throw new Error("KernelSmartAccount is required");
+  if (!kernelClient || !kernelAccount) {
+    throw new Error("Kernel Client is required");
   }
-  if (to === undefined || value === undefined || data === undefined) {
-    throw new Error("UserOperation is required");
-  }
-  if (!appId) {
-    throw new Error("API key is required");
-  }
-
-  const kernelClient = createKernelAccountClient({
-    account: account,
-    chain: sepolia,
-    bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
-    ),
-    entryPoint: getEntryPoint(),
-    middleware: {
-      sponsorUserOperation: async ({ userOperation }) => {
-        const zerodevPaymaster = createZeroDevPaymasterClient({
-          entryPoint: getEntryPoint(),
-          chain: sepolia,
-          transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
-          ),
-        });
-        return zerodevPaymaster.sponsorUserOperation({
-          userOperation,
-          entryPoint: getEntryPoint(),
-        });
-      },
-    },
-  });
-
-  const calldata = await kernelClient.account.encodeCallData({
-    to,
-    value,
-    data,
-  });
 
   return kernelClient.sendUserOperation({
     userOperation: {
-      callData: calldata,
+      callData: await kernelAccount.encodeCallData({
+        to: parameters.address,
+        value: parameters.value ?? 0n,
+        data: encodeFunctionData(parameters),
+      }),
     },
   });
 }
-
-export type SendUserOperationWriteArgs = Partial<{
-  to: `0x${string}`;
-  value: bigint;
-  data: `0x${string}`;
-}>;
 
 export function useSendUserOperation<
   config extends Config = ResolvedRegister["config"],
   context = unknown
 >() {
-  const { kernelAccount } = useKernelAccount();
-  const { appId } = useAppId();
+  const { kernelAccount, kernelClient } = useKernelClient();
 
-  const {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    mutate,
-    mutateAsync,
-    reset,
-    status,
-    variables,
-  } = useMutation({
+  const { mutate, ...result } = useMutation({
     mutationKey: mutationKey({
-      appId,
-      account: kernelAccount,
-      parameters: {},
+      kernelClient,
+      kernelAccount,
+      parameters: {} as SendUserOperationWriteArgs,
     }),
     mutationFn,
   });
 
   const write = useMemo(() => {
-    if (!kernelAccount || !appId) return undefined;
+    if (!kernelAccount || !kernelClient) return undefined;
     return (parameters: SendUserOperationWriteArgs) => {
       mutate({
         parameters,
-        account: kernelAccount,
-        appId,
+        kernelAccount,
+        kernelClient,
       });
     };
-  }, [mutate, appId, kernelAccount]);
+  }, [mutate, kernelClient, kernelAccount]);
 
   return {
-    data,
-    error,
-    isError,
-    isIdle,
-    isSuccess,
-    reset,
-    status,
-    variables,
+    ...result,
     write,
   };
 }

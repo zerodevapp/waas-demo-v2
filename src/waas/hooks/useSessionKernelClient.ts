@@ -12,8 +12,11 @@ import {
   createZeroDevPaymasterClient,
   type KernelValidator,
 } from "@zerodev/sdk";
+import { bundlerActions } from "permissionless";
+import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { type EntryPoint } from "permissionless/types";
 import {
+  createClient,
   getAbiItem,
   http,
   toFunctionSelector,
@@ -95,6 +98,17 @@ async function getSessionKernelClient({
     ),
     entryPoint: getEntryPoint(),
     middleware: {
+      gasPrice: async () => {
+        const client = createClient({
+          chain: sepolia,
+          transport: http(
+            `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
+          ),
+        })
+          .extend(bundlerActions(getEntryPoint()))
+          .extend(pimlicoBundlerActions(getEntryPoint()));
+        return (await client.getUserOperationGasPrice()).fast;
+      },
       sponsorUserOperation: async ({ userOperation }) => {
         const kernelPaymaster = createZeroDevPaymasterClient({
           entryPoint: getEntryPoint(),
