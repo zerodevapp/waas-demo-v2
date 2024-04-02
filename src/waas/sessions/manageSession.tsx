@@ -48,19 +48,21 @@ export function getAllSession(): SessionType | null {
   const sessionKey = localStorage.getItem(`kernel_session`);
   if (!sessionKey) return null;
 
-  const encodedSession: EncodedSessionType = JSON.parse(sessionKey);
-
   let session: SessionType = {};
-  for (const [sessionId, encodedSessionInfo] of Object.entries(
-    encodedSession
-  )) {
-    session[sessionId as `0x${string}`] = {
-      smartAccount: encodedSessionInfo.smartAccount,
-      enableSignature: encodedSessionInfo.enableSignature,
-      policies: encodedSessionInfo.policies.map(desirializePolicy),
-      sessionKey: encodedSessionInfo.sessionKey,
-    };
-  }
+  try {
+    const encodedSession: EncodedSessionType = JSON.parse(sessionKey);
+    for (const [sessionId, encodedSessionInfo] of Object.entries(
+      encodedSession
+    )) {
+      session[sessionId as `0x${string}`] = {
+        smartAccount: encodedSessionInfo.smartAccount,
+        enableSignature: encodedSessionInfo.enableSignature,
+        policies: encodedSessionInfo.policies.map(desirializePolicy),
+        sessionKey: encodedSessionInfo.sessionKey,
+      };
+    }
+  } catch (err) {}
+
   return session;
 }
 
