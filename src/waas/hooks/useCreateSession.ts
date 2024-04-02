@@ -1,4 +1,4 @@
-import { useKernelAccount, useSession } from "@/waas";
+import { useKernelAccount } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
 import {
   toPermissionValidator,
@@ -20,27 +20,28 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
+import { useUpdateSession } from "../components/ZeroDevProvider/SessionContext";
 import { createSessionKey } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
 
-export type CreatePermissionWriteArgs = Policy[] | undefined;
+export type CreateSessionWriteArgs = Policy[] | undefined;
 
-export type UseCreatePermissionKey = {
+export type UseCreateSessionKey = {
   validator: KernelValidator<EntryPoint> | null;
-  policies: CreatePermissionWriteArgs;
+  policies: CreateSessionWriteArgs;
   client: PublicClient | undefined;
 };
 
-export type UseCreatePermissionArgs = {
+export type UseCreateSessionArgs = {
   onSuccess?: () => void;
 };
 
-function mutationKey({ ...config }: UseCreatePermissionKey) {
+function mutationKey({ ...config }: UseCreateSessionKey) {
   const { policies, client, validator } = config;
 
   return [
     {
-      entity: "CreatePermission",
+      entity: "CreateSession",
       client,
       validator,
       policies,
@@ -48,11 +49,19 @@ function mutationKey({ ...config }: UseCreatePermissionKey) {
   ] as const;
 }
 
-async function createSessionClient(
-  validator: KernelValidator<EntryPoint>,
-  policies: Policy[],
-  client: PublicClient
-) {
+async function mutationFn(config: UseCreateSessionKey) {
+  const { policies, validator, client } = config;
+
+  if (!validator) {
+    throw new Error("No validator provided");
+  }
+  if (!policies) {
+    throw new Error("No parameters provided");
+  }
+  if (!client) {
+    throw new Error("No client provided");
+  }
+
   const sessionKey = createSessionKey();
   const sessionSigner = privateKeyToAccount(sessionKey);
 
@@ -78,42 +87,26 @@ async function createSessionClient(
     },
   });
   const smartAccount = permissionAccount.address;
-  const pluginEnableSig =
+  const enableSignature =
     await permissionAccount.kernelPluginManager.getPluginEnableSignature(
       permissionAccount.address
     );
 
-  const permissionId = permissionValidator.getPermissionId();
+  const sessionId = permissionValidator.getPermissionId();
 
   return {
-    permissionId,
+    sessionId,
     smartAccount,
-    pluginEnableSig,
+    enableSignature,
     policies,
     sessionKey,
   };
 }
 
-function mutationFn(config: UseCreatePermissionKey) {
-  const { policies, validator, client } = config;
-
-  if (!validator) {
-    throw new Error("No validator provided");
-  }
-  if (!policies) {
-    throw new Error("No parameters provided");
-  }
-  if (!client) {
-    throw new Error("No client provided");
-  }
-
-  return createSessionClient(validator, policies, client);
-}
-
-export function useCreatePermission(args?: UseCreatePermissionArgs) {
+export function useCreateSession(args?: UseCreateSessionArgs) {
   const { validator } = useKernelAccount();
   const client = usePublicClient();
-  const { setSession } = useSession();
+  const { updateSession } = useUpdateSession();
 
   const {
     data,
@@ -134,20 +127,14 @@ export function useCreatePermission(args?: UseCreatePermissionArgs) {
     }),
     mutationFn,
     onSuccess: (data) => {
-      setSession(
-        data.permissionId,
-        data.smartAccount,
-        data.pluginEnableSig,
-        data.policies,
-        data.sessionKey
-      );
+      updateSession(data);
       args?.onSuccess?.();
     },
   });
 
   const write = useMemo(() => {
     if (!validator || !client) return undefined;
-    return (policies: CreatePermissionWriteArgs) =>
+    return (policies: CreateSessionWriteArgs) =>
       mutate({
         policies,
         client,

@@ -27,10 +27,10 @@ import { type SessionType } from "../sessions/manageSession";
 import { getEntryPoint } from "../utils/entryPoint";
 import { useAppId } from "./useAppId";
 import { useKernelAccount } from "./useKernelAccount";
-import { useSession } from "./useSession";
+import { useSessions } from "./useSessions";
 
 export type UseSessionKernelClientArgs = {
-  permissionId: `0x${string}` | null | undefined;
+  sessionId: `0x${string}` | null | undefined;
 };
 
 export type SessionKernelClientKey = [
@@ -39,7 +39,7 @@ export type SessionKernelClientKey = [
     appId: string | undefined | null;
     validator: KernelValidator<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
-    permissionId: `0x${string}` | null | undefined;
+    sessionId: `0x${string}` | null | undefined;
     session: SessionType | undefined;
   }
 ];
@@ -47,7 +47,7 @@ export type SessionKernelClientKey = [
 async function getSessionKernelClient({
   queryKey,
 }: QueryFunctionContext<SessionKernelClientKey>) {
-  const [_key, { appId, publicClient, permissionId, validator, session }] =
+  const [_key, { appId, publicClient, sessionId, validator, session }] =
     queryKey;
 
   if (!session) {
@@ -58,12 +58,12 @@ async function getSessionKernelClient({
     throw new Error("session not found");
   }
 
-  if (sessionLength > 1 && !permissionId) {
-    throw new Error("permissionId is required");
+  if (sessionLength > 1 && !sessionId) {
+    throw new Error("sessionId is required");
   }
   const id = Object.keys(session)[0] as `0x${string}`;
   const selectedSession =
-    sessionLength === 1 ? session[id] : session[permissionId!];
+    sessionLength === 1 ? session[id] : session[sessionId!];
 
   const sessionSigner = privateKeyToAccount(selectedSession.sessionKey);
   const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
@@ -114,19 +114,19 @@ async function getSessionKernelClient({
 }
 
 export function useSessionKernelClient({
-  permissionId,
+  sessionId,
 }: UseSessionKernelClientArgs) {
   const { appId } = useAppId();
   const client = usePublicClient();
   const { validator } = useKernelAccount();
-  const { session } = useSession();
+  const session = useSessions();
 
   const { data, isLoading, error } = useQuery({
     queryKey: [
       "session_kernel_client",
       {
         publicClient: client,
-        permissionId,
+        sessionId,
         validator,
         session,
         appId,

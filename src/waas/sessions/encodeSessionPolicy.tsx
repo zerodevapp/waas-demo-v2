@@ -14,7 +14,7 @@ export type EncodedSessionInfoType = {
 };
 
 export type EncodedSessionType = {
-  [permissionId: `0x${string}`]: EncodedSessionInfoType;
+  [sessionId: `0x${string}`]: EncodedSessionInfoType;
 };
 
 export function serializePolicy(policies: Policy[]) {

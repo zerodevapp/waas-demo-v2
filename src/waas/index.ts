@@ -16,9 +16,9 @@ export { useSessionKernelClient } from "./hooks/useSessionKernelClient";
 
 export { useSessionPermission } from "./hooks/useSessionPermission";
 
-export { useCreatePermission } from "./hooks/useCreatePermission";
+export { useCreateSession } from "./hooks/useCreateSession";
 
-export { useSession } from "./hooks/useSession";
+export { useSessions } from "./hooks/useSessions";
 
 export { useAppId } from "./hooks/useAppId";
 

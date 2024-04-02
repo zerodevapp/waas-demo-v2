@@ -1,16 +1,25 @@
 import { type Policy } from "@zerodev/permission-validator";
-import { ReactNode, createContext, useEffect, useMemo, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { createSession, getAllSession } from "../../sessions/manageSession";
 
+type UpdateSessionArgs = {
+  sessionId: `0x${string}`;
+  smartAccount: `0x${string}`;
+  enableSignature: `0x${string}`;
+  policies: Policy[];
+  sessionKey: `0x${string}`;
+};
+
 interface SessionContextValue {
-  session: SessionType | null;
-  setSession: (
-    permissionId: `0x${string}`,
-    smartAccount: `0x${string}`,
-    enableSignature: `0x${string}`,
-    policies: Policy[],
-    sessionKey: `0x${string}`
-  ) => void;
+  sessions: SessionType | null;
+  updateSession: (args: UpdateSessionArgs) => void;
 }
 
 interface SessionProviderProps {
@@ -25,39 +34,39 @@ export type SessionInfoType = {
 };
 
 export const SessionContext = createContext<SessionContextValue>({
-  session: {},
-  setSession: () => {},
+  sessions: {},
+  updateSession: () => {},
 });
 
 export type SessionType = {
-  [permissionId: `0x${string}`]: SessionInfoType;
+  [sessionId: `0x${string}`]: SessionInfoType;
 };
 
 export function SessionProvider({ children }: SessionProviderProps) {
-  const [session, setSession] = useState<SessionType>({});
+  const [sessions, setSessions] = useState<SessionType>({});
 
   useEffect(() => {
-    const sessions = getAllSession();
-    setSession(sessions || {});
+    const allSession = getAllSession();
+    setSessions(allSession || {});
   }, []);
 
-  function updateSession(
-    permissionId: `0x${string}`,
-    smartAccount: `0x${string}`,
-    enableSignature: `0x${string}`,
-    policies: Policy[],
-    sessionKey: `0x${string}`
-  ) {
+  function updateSession({
+    sessionId,
+    smartAccount,
+    enableSignature,
+    policies,
+    sessionKey,
+  }: UpdateSessionArgs) {
     createSession(
-      permissionId,
+      sessionId,
       smartAccount,
       enableSignature,
       policies,
       sessionKey
     );
-    setSession((prev) => ({
+    setSessions((prev) => ({
       ...prev,
-      [permissionId]: {
+      [sessionId]: {
         smartAccount,
         enableSignature,
         policies,
@@ -70,13 +79,19 @@ export function SessionProvider({ children }: SessionProviderProps) {
     <SessionContext.Provider
       value={useMemo(
         () => ({
-          session,
-          setSession: updateSession,
+          sessions,
+          updateSession: updateSession,
         }),
-        [session]
+        [sessions]
       )}
     >
       {children}
     </SessionContext.Provider>
   );
+}
+
+export function useUpdateSession() {
+  const { updateSession } = useContext(SessionContext);
+
+  return { updateSession };
 }

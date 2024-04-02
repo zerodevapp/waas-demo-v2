@@ -14,7 +14,7 @@ export type SessionInfoType = {
 };
 
 export type SessionType = {
-  [permissionId: `0x${string}`]: SessionInfoType;
+  [sessionId: `0x${string}`]: SessionInfoType;
 };
 
 export function createSessionKey() {
@@ -22,7 +22,7 @@ export function createSessionKey() {
 }
 
 export function createSession(
-  permissionId: `0x${string}`,
+  sessionId: `0x${string}`,
   smartAccount: `0x${string}`,
   enableSignature: `0x${string}`,
   policies: Policy[],
@@ -35,7 +35,7 @@ export function createSession(
     );
   } catch (err) {}
 
-  sessionKeyStorage[permissionId] = {
+  sessionKeyStorage[sessionId] = {
     smartAccount,
     enableSignature,
     policies: serializePolicy(policies),
@@ -51,10 +51,10 @@ export function getAllSession(): SessionType | null {
   const encodedSession: EncodedSessionType = JSON.parse(sessionKey);
 
   let session: SessionType = {};
-  for (const [permissionId, encodedSessionInfo] of Object.entries(
+  for (const [sessionId, encodedSessionInfo] of Object.entries(
     encodedSession
   )) {
-    session[permissionId as `0x${string}`] = {
+    session[sessionId as `0x${string}`] = {
       smartAccount: encodedSessionInfo.smartAccount,
       enableSignature: encodedSessionInfo.enableSignature,
       policies: encodedSessionInfo.policies.map(desirializePolicy),
@@ -65,10 +65,10 @@ export function getAllSession(): SessionType | null {
 }
 
 export function getSession(
-  permissionId: `0x${string}` | undefined
+  sessionId: `0x${string}` | undefined
 ): SessionInfoType | null {
   const sessionKey = getAllSession();
-  if (!sessionKey || !permissionId) return null;
+  if (!sessionKey || !sessionId) return null;
 
-  return sessionKey[permissionId];
+  return sessionKey[sessionId];
 }

@@ -1,4 +1,4 @@
-import { useCreatePermission } from "@/waas";
+import { useCreateSession } from "@/waas";
 import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Loader, Modal, Select } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -19,7 +19,7 @@ export default function PermissionModal({
   const { policies } = useMockedPolicy();
 
   const permissions = policies?.[policyIdx].policy;
-  const { write, data, error } = useCreatePermission({
+  const { write, data, error } = useCreateSession({
     onSuccess: () => {
       onClose();
     },

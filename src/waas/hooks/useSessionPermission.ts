@@ -22,7 +22,7 @@ export type SessionPermissionKey = [
   params: {
     validator: KernelValidator<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
-    permissionId: `0x${string}` | undefined | null;
+    sessionId: `0x${string}` | undefined | null;
   }
 ];
 
@@ -41,18 +41,18 @@ export type useSessionPermissionRes = {
 };
 
 export type useSessionPermissionArgs = {
-  permissionId: `0x${string}` | undefined;
+  sessionId: `0x${string}` | undefined;
 };
 
 async function fetchPermission({
   queryKey,
 }: QueryFunctionContext<SessionPermissionKey>): Promise<fetchPermissionRes> {
-  const [_key, { publicClient, permissionId, validator }] = queryKey;
+  const [_key, { publicClient, sessionId, validator }] = queryKey;
 
-  if (!permissionId) {
+  if (!sessionId) {
     throw new Error("sessionId are required");
   }
-  const session = getSession(permissionId);
+  const session = getSession(sessionId);
 
   if (!session) {
     return {
@@ -92,7 +92,7 @@ async function fetchPermission({
 }
 
 export function useSessionPermission({
-  permissionId,
+  sessionId,
 }: useSessionPermissionArgs): useSessionPermissionRes {
   const { validator } = useKernelAccount();
   const client = usePublicClient();
@@ -104,7 +104,7 @@ export function useSessionPermission({
   } = useQuery<SessionPermissionKey>({
     queryKey: [
       "session_permission",
-      { publicClient: client, validator, permissionId },
+      { publicClient: client, validator, sessionId },
     ],
     queryFn: fetchPermission as unknown as QueryFunction<
       SessionPermissionKey,

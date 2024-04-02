@@ -4,22 +4,22 @@ import {
   useKernelClient,
   usePermissionModal,
   useSendUserOperationWithSession,
-  useSession,
   useSessionPermission,
+  useSessions,
 } from "@/waas";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
 
-function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
+function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
   const [isLoading, setIsLoading] = useState(false);
   const { kernelAccount } = useKernelAccount();
   const { isExpired, enableSignature, permissions } = useSessionPermission({
-    permissionId,
+    sessionId,
   });
   const { data, write, error } = useSendUserOperationWithSession({
-    permissionId,
+    sessionId,
   });
   const [mintCalldata, setMintCalldata] = useState<`0x${string}` | null>(null);
 
@@ -35,11 +35,11 @@ function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
   return (
     <>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
-        {permissionId && <p>{`Permission ID: ${permissionId}`}</p>}
+        {sessionId && <p>{`Permission ID: ${sessionId}`}</p>}
         <Button
           variant="outline"
           disabled={isLoading || !write}
-          loading={isLoading || (permissionId && isExpired === undefined)}
+          loading={isLoading || (sessionId && isExpired === undefined)}
           onClick={() => {
             setIsLoading(true);
             write?.({ to: nftAddress, value: 0n, data: mintCalldata! });
@@ -55,7 +55,7 @@ function SessionInfo({ permissionId }: { permissionId?: `0x${string}` }) {
 
 export default function SessionBlock() {
   const { openPermissionModal } = usePermissionModal();
-  const { session } = useSession();
+  const sessions = useSessions();
   const { kernelAccount } = useKernelClient();
   const accountAddress = kernelAccount?.address;
 
@@ -65,17 +65,17 @@ export default function SessionBlock() {
       <Button variant="outline" onClick={() => openPermissionModal?.()}>
         Set Permission
       </Button>
-      <Title order={5}>Send UserOp without providing a permissionId</Title>
-      {session && <SessionInfo />}
-      <Title order={5}>Send UserOp with permissionId</Title>
-      {session &&
-        Object.keys(session)
+      <Title order={5}>Send UserOp without providing a sessionId</Title>
+      {sessions && <SessionInfo />}
+      <Title order={5}>Send UserOp with sessionId</Title>
+      {sessions &&
+        Object.keys(sessions)
           .filter(
-            (pId) =>
-              session[pId as `0x${string}`].smartAccount === accountAddress
+            (sId) =>
+              sessions[sId as `0x${string}`].smartAccount === accountAddress
           )
-          .map((pId, index) => (
-            <SessionInfo key={index} permissionId={pId as `0x${string}`} />
+          .map((sId, index) => (
+            <SessionInfo key={index} sessionId={sId as `0x${string}`} />
           ))}
     </>
   );
