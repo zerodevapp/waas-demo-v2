@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { encodeFunctionData } from "viem";
 import { ResolvedRegister } from "wagmi";
 
-export type SendUserOperationWriteArgs = WriteContractParameters;
+export type SendUserOperationWriteArgs = WriteContractParameters[];
 
 export type UseSendUserOperationArgs = {
   parameters: SendUserOperationWriteArgs;
@@ -38,11 +38,13 @@ async function mutationFn(config: UseSendUserOperationArgs) {
 
   return kernelClient.sendUserOperation({
     userOperation: {
-      callData: await kernelAccount.encodeCallData({
-        to: parameters.address,
-        value: parameters.value ?? 0n,
-        data: encodeFunctionData(parameters),
-      }),
+      callData: await kernelAccount.encodeCallData(
+        parameters.map((p) => ({
+          to: p.address,
+          value: p.value ?? 0n,
+          data: encodeFunctionData(p),
+        }))
+      ),
     },
   });
 }

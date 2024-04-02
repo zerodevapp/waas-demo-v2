@@ -12,9 +12,9 @@ export enum SignerType {
 }
 
 export default function ConnectSigner() {
-  const { connectors, error } = useConnect();
+  const { connectors } = useConnect();
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
-  const { connect } = useCreateKernelClientEOA();
+  const { connect, error } = useCreateKernelClientEOA();
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);

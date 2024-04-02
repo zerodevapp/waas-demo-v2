@@ -25,13 +25,22 @@ export default function SmartAccountBlock() {
           loading={isLoading}
           onClick={() => {
             setIsLoading(true);
-            write?.({
-              address: nftAddress,
-              abi: abi,
-              functionName: "mint",
-              args: [kernelAccount!.address],
-              value: 0n,
-            });
+            write?.([
+              {
+                address: nftAddress,
+                abi: abi,
+                functionName: "mint",
+                args: [kernelAccount!.address],
+                value: 0n,
+              },
+              {
+                address: nftAddress,
+                abi: abi,
+                functionName: "mint",
+                args: [kernelAccount!.address],
+                value: 0n,
+              },
+            ]);
           }}
         >
           Mint

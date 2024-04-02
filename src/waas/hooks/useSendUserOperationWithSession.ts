@@ -13,7 +13,7 @@ export type UseSendUserOperationWithSessionArgs = {
   sessionId?: `0x${string}` | undefined;
 };
 
-export type SendUserOperationWithSessionWriteArgs = WriteContractParameters;
+export type SendUserOperationWithSessionWriteArgs = WriteContractParameters[];
 
 export type UseSendUserOperationWithSessionKey = {
   parameters: SendUserOperationWithSessionWriteArgs;
@@ -43,11 +43,13 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 
   const userOpHash = await kernelClient.sendUserOperation({
     userOperation: {
-      callData: await kernelAccount.encodeCallData({
-        to: parameters.address,
-        value: parameters.value ?? 0n,
-        data: encodeFunctionData(parameters),
-      }),
+      callData: await kernelAccount.encodeCallData(
+        parameters.map((p) => ({
+          to: p.address,
+          value: p.value ?? 0n,
+          data: encodeFunctionData(p),
+        }))
+      ),
     },
   });
 
