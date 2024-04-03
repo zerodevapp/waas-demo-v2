@@ -1,13 +1,18 @@
 import { useCreateKernelClientPasskey } from "@/waas";
 import { Button, Flex, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { KernelVersionType } from "../../../types";
 
-export default function PasskeySigner() {
+export default function PasskeySigner({
+  version,
+}: {
+  version: KernelVersionType;
+}) {
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { connectRegister, connectLogin, error } = useCreateKernelClientPasskey(
-    { version: "v2" }
+    { version: version }
   );
 
   useEffect(() => {

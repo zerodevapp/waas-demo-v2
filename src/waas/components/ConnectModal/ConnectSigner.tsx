@@ -56,7 +56,7 @@ export default function ConnectSigner({
         </>
       )}
       {signerStep === SignerType.ECDSA && <ECDSASigner />}
-      {signerStep === SignerType.Passkey && <PasskeySigner />}
+      {signerStep === SignerType.Passkey && <PasskeySigner version={version} />}
     </div>
   );
 }
