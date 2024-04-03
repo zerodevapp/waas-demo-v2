@@ -1,4 +1,6 @@
 import { type Policy } from "@zerodev/permission-validator";
+import { type Permission } from "@zerodev/session-key";
+import { type Abi } from "viem";
 import { generatePrivateKey } from "viem/accounts";
 import {
   desirializePolicy,
@@ -10,6 +12,7 @@ export type SessionInfoType = {
   smartAccount: `0x${string}`;
   enableSignature: `0x${string}`;
   policies: Policy[];
+  permissions: Permission<Abi>[];
   sessionKey: `0x${string}`;
 };
 
@@ -26,6 +29,7 @@ export function createSession(
   smartAccount: `0x${string}`,
   enableSignature: `0x${string}`,
   policies: Policy[],
+  permissions: Permission<Abi>[],
   sessionKey: `0x${string}`
 ) {
   let sessionKeyStorage: EncodedSessionType = {};
@@ -39,6 +43,7 @@ export function createSession(
     smartAccount,
     enableSignature,
     policies: serializePolicy(policies),
+    permissions,
     sessionKey,
   };
   localStorage.setItem(`kernel_session`, JSON.stringify(sessionKeyStorage));
@@ -59,6 +64,7 @@ export function getAllSession(): SessionType | null {
         enableSignature: encodedSessionInfo.enableSignature,
         policies: encodedSessionInfo.policies.map(desirializePolicy),
         sessionKey: encodedSessionInfo.sessionKey,
+        permissions: encodedSessionInfo.permissions,
       };
     }
   } catch (err) {}

@@ -6,8 +6,13 @@ import { walletClientToSmartAccountSigner } from "permissionless";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
 import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
-import { getEntryPoint } from "../utils/entryPoint";
+import { type KernelVersionType } from "../types";
+import { getEntryPointFromVersion } from "../utils/entryPoint";
 import { useKernelAccount } from "./useKernelAccount";
+
+export type UseCreateKernelClientEOAArg = {
+  version: KernelVersionType;
+};
 
 export type CreateKernelClientEOAArgs = {
   connector: Connector | undefined;
@@ -17,6 +22,7 @@ export type UseCreateKernelClientEOAKey = {
   connector: Connector | null | undefined;
   wagmiConfig: Config | undefined | null;
   publicClient: PublicClient | undefined | null;
+  version: KernelVersionType;
 };
 
 function mutationKey({ ...config }: UseCreateKernelClientEOAKey) {
@@ -32,11 +38,12 @@ function mutationKey({ ...config }: UseCreateKernelClientEOAKey) {
 }
 
 async function mutationFn(config: UseCreateKernelClientEOAKey) {
-  const { wagmiConfig, connector, publicClient } = config;
+  const { wagmiConfig, connector, publicClient, version } = config;
 
   if (!wagmiConfig || !connector || !publicClient) {
     throw new Error("missing config and connector");
   }
+  const entryPoint = getEntryPointFromVersion(version);
 
   const { status } = getAccount(wagmiConfig);
   if (status === "disconnected") {
@@ -44,22 +51,24 @@ async function mutationFn(config: UseCreateKernelClientEOAKey) {
   }
   const walletClient = await getWalletClient(wagmiConfig);
   const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
-    entryPoint: getEntryPoint(),
+    entryPoint: entryPoint,
     signer: walletClientToSmartAccountSigner(walletClient),
   });
   const account = await createKernelAccount(publicClient, {
-    entryPoint: getEntryPoint(),
+    entryPoint: entryPoint,
     plugins: {
       sudo: ecdsaValidator,
-      entryPoint: getEntryPoint(),
+      entryPoint: entryPoint,
     },
   });
 
-  return { validator: ecdsaValidator, kernelAccount: account };
+  return { validator: ecdsaValidator, kernelAccount: account, entryPoint };
 }
 
-export function useCreateKernelClientEOA() {
-  const { setValidator, setKernelAccount } = useKernelAccount();
+export function useCreateKernelClientEOA({
+  version,
+}: UseCreateKernelClientEOAArg) {
+  const { setValidator, setKernelAccount, setEntryPoint } = useKernelAccount();
   const config = useConfig();
   const client = usePublicClient();
 
@@ -68,6 +77,7 @@ export function useCreateKernelClientEOA() {
       wagmiConfig: config,
       connector: undefined,
       publicClient: client,
+      version,
     }),
     mutationFn,
   });
@@ -78,15 +88,17 @@ export function useCreateKernelClientEOA() {
         connector,
         wagmiConfig: config,
         publicClient: client,
+        version,
       });
-  }, [config, mutate, client]);
+  }, [config, mutate, client, version]);
 
   useEffect(() => {
     if (data) {
       setValidator(data.validator);
       setKernelAccount(data.kernelAccount);
+      setEntryPoint(data.entryPoint);
     }
-  }, [data, setValidator, setKernelAccount]);
+  }, [data, setValidator, setKernelAccount, setEntryPoint]);
 
   return {
     ...result,

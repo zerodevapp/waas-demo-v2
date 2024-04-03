@@ -1,5 +1,6 @@
 import { type Policy } from "@zerodev/permission-validator";
-import { type Hex } from "viem";
+import { Permission } from "@zerodev/session-key";
+import { type Abi, type Hex } from "viem";
 
 type EncodedPolicy = {
   getPolicyData: `0x${string}`;
@@ -10,6 +11,7 @@ export type EncodedSessionInfoType = {
   smartAccount: `0x${string}`;
   enableSignature: `0x${string}`;
   policies: EncodedPolicy[];
+  permissions: Permission<Abi>[];
   sessionKey: `0x${string}`;
 };
 

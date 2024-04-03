@@ -10,6 +10,8 @@ interface ZeroDevValidatorValue {
   setKernelAccount: (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => void;
+  entryPoint: EntryPoint | null;
+  setEntryPoint: (entryPoint: EntryPoint | null) => void;
 }
 
 export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
@@ -17,6 +19,8 @@ export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
   setValidator: () => {},
   kernelAccount: null,
   setKernelAccount: () => {},
+  entryPoint: null,
+  setEntryPoint: () => {},
 });
 
 interface ZeroDevValidatorProviderProps {
@@ -31,6 +35,7 @@ export function ZeroDevValidatorProvider({
     useState<KernelValidator<EntryPoint> | null>(null);
   const [kernelAccount, setKernelAccount] =
     useState<KernelSmartAccount<EntryPoint> | null>(null);
+  const [entryPoint, setEntryPoint] = useState<EntryPoint | null>(null);
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
     setValidator(validator);
@@ -71,8 +76,10 @@ export function ZeroDevValidatorProvider({
           setValidator: updateValidator,
           kernelAccount,
           setKernelAccount: updateKernelAccount,
+          entryPoint,
+          setEntryPoint,
         }),
-        [validator, kernelAccount]
+        [validator, kernelAccount, entryPoint]
       )}
     >
       {children}

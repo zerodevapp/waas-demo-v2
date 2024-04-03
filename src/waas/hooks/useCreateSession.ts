@@ -1,39 +1,32 @@
 import { useKernelAccount } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
-import {
-  toPermissionValidator,
-  type Policy,
-} from "@zerodev/permission-validator";
-import { toECDSASigner } from "@zerodev/permission-validator/signers";
-import {
-  KernelV3ExecuteAbi,
-  KernelValidator,
-  createKernelAccount,
-} from "@zerodev/sdk";
+import { type Policy } from "@zerodev/permission-validator";
+import { KernelValidator } from "@zerodev/sdk";
+import { type Permission } from "@zerodev/session-key";
+import { ENTRYPOINT_ADDRESS_V06, ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import {
-  getAbiItem,
-  toFunctionSelector,
-  zeroAddress,
-  type PublicClient,
-} from "viem";
+import { type Abi, type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useUpdateSession } from "../components/ZeroDevProvider/SessionContext";
+import { createSessionKernelAccount } from "../sessions/createSessionKernelAccount";
 import { createSessionKey } from "../sessions/manageSession";
-import { getEntryPoint } from "../utils/entryPoint";
 
-export type CreateSessionWriteArgs = Policy[] | undefined;
+export type CreateSessionWriteArgs = {
+  policies?: Policy[];
+  permissions?: Permission<Abi>[];
+};
 
 export type UseCreateSessionKey = {
   validator: KernelValidator<EntryPoint> | null;
   policies: CreateSessionWriteArgs;
   client: PublicClient | undefined;
+  entryPoint: EntryPoint | null;
 };
 
 function mutationKey({ ...config }: UseCreateSessionKey) {
-  const { policies, client, validator } = config;
+  const { policies, client, validator, entryPoint } = config;
 
   return [
     {
@@ -41,66 +34,42 @@ function mutationKey({ ...config }: UseCreateSessionKey) {
       client,
       validator,
       policies,
+      entryPoint,
     },
   ] as const;
 }
 
 async function mutationFn(config: UseCreateSessionKey) {
-  const { policies, validator, client } = config;
+  const { policies, validator, client, entryPoint } = config;
 
-  if (!validator) {
+  if (!validator || !client || !entryPoint) {
     throw new Error("No validator provided");
   }
-  if (!policies) {
-    throw new Error("No policies provided");
-  }
-  if (!client) {
-    throw new Error("No client provided");
+  if (entryPoint === ENTRYPOINT_ADDRESS_V07 && !policies.policies) {
+    throw new Error("No policies provided for kernel v3");
+  } else if (entryPoint === ENTRYPOINT_ADDRESS_V06 && !policies.permissions) {
+    throw new Error("No permissions provided for kernel v2");
   }
 
   const sessionKey = createSessionKey();
   const sessionSigner = privateKeyToAccount(sessionKey);
 
-  const ecdsaModularSigner = toECDSASigner({ signer: sessionSigner });
-  const permissionValidator = await toPermissionValidator(client, {
-    entryPoint: getEntryPoint(),
-    signer: ecdsaModularSigner,
-    policies: policies,
+  const kernelAccount = await createSessionKernelAccount({
+    sessionSigner,
+    publicClient: client,
+    sudoValidator: validator,
+    entryPoint: entryPoint,
+    policies: policies.policies,
+    permissions: policies.permissions,
   });
-
-  const permissionAccount = await createKernelAccount(client, {
-    entryPoint: getEntryPoint(),
-    plugins: {
-      sudo: validator,
-      regular: permissionValidator,
-      entryPoint: getEntryPoint(),
-      executorData: {
-        executor: zeroAddress,
-        selector: toFunctionSelector(
-          getAbiItem({ abi: KernelV3ExecuteAbi, name: "execute" })
-        ),
-      },
-    },
-  });
-  const smartAccount = permissionAccount.address;
-  const enableSignature =
-    await permissionAccount.kernelPluginManager.getPluginEnableSignature(
-      permissionAccount.address
-    );
-
-  const sessionId = permissionValidator.getPermissionId();
-
   return {
-    sessionId,
-    smartAccount,
-    enableSignature,
-    policies,
     sessionKey,
+    ...kernelAccount,
   };
 }
 
 export function useCreateSession() {
-  const { validator } = useKernelAccount();
+  const { validator, entryPoint } = useKernelAccount();
   const client = usePublicClient();
   const { updateSession } = useUpdateSession();
 
@@ -108,7 +77,8 @@ export function useCreateSession() {
     mutationKey: mutationKey({
       client,
       validator,
-      policies: undefined,
+      policies: { policies: undefined, permissions: undefined },
+      entryPoint,
     }),
     mutationFn,
     onSuccess: (data) => {
@@ -117,14 +87,15 @@ export function useCreateSession() {
   });
 
   const write = useMemo(() => {
-    if (!validator || !client) return undefined;
+    if (!validator || !client || !entryPoint) return undefined;
     return (policies: CreateSessionWriteArgs) =>
       mutate({
         policies,
         client,
         validator,
+        entryPoint,
       });
-  }, [mutate, validator, client]);
+  }, [mutate, validator, client, entryPoint]);
 
   return {
     ...result,

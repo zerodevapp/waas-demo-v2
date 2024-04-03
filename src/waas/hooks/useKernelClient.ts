@@ -15,7 +15,6 @@ import { type EntryPoint } from "permissionless/types";
 import { createClient, http, type PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { getEntryPoint } from "../utils/entryPoint";
 
 export type KernelClientKey = [
   key: string,
@@ -23,15 +22,16 @@ export type KernelClientKey = [
     appId: string | undefined | null;
     kernelAccount: KernelSmartAccount<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
+    entryPoint: EntryPoint | null;
   }
 ];
 
 async function getKernelClient({
   queryKey,
 }: QueryFunctionContext<KernelClientKey>) {
-  const [_key, { appId, publicClient, kernelAccount }] = queryKey;
+  const [_key, { appId, publicClient, kernelAccount, entryPoint }] = queryKey;
 
-  if (!appId || !publicClient || !kernelAccount) {
+  if (!appId || !publicClient || !kernelAccount || !entryPoint) {
     throw new Error("missing appId or kernelAccount");
   }
 
@@ -41,7 +41,7 @@ async function getKernelClient({
     bundlerTransport: http(
       `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
     ),
-    entryPoint: getEntryPoint(),
+    entryPoint: entryPoint,
     middleware: {
       gasPrice: async () => {
         const client = createClient({
@@ -50,13 +50,13 @@ async function getKernelClient({
             `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
           ),
         })
-          .extend(bundlerActions(getEntryPoint()))
-          .extend(pimlicoBundlerActions(getEntryPoint()));
+          .extend(bundlerActions(entryPoint))
+          .extend(pimlicoBundlerActions(entryPoint));
         return (await client.getUserOperationGasPrice()).fast;
       },
       sponsorUserOperation: async ({ userOperation }) => {
         const kernelPaymaster = createZeroDevPaymasterClient({
-          entryPoint: getEntryPoint(),
+          entryPoint: entryPoint,
           chain: sepolia,
           transport: http(
             `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId!}?paymasterProvider=PIMLICO`
@@ -64,7 +64,7 @@ async function getKernelClient({
         });
         return kernelPaymaster.sponsorUserOperation({
           userOperation,
-          entryPoint: getEntryPoint(),
+          entryPoint: entryPoint,
         });
       },
     },
@@ -74,7 +74,7 @@ async function getKernelClient({
 
 export function useKernelClient() {
   const { appId } = useAppId();
-  const { kernelAccount } = useKernelAccount();
+  const { kernelAccount, entryPoint } = useKernelAccount();
   const client = usePublicClient();
 
   const { data, isLoading, error } = useQuery({
@@ -84,10 +84,11 @@ export function useKernelClient() {
         publicClient: client,
         kernelAccount,
         appId,
+        entryPoint,
       },
     ],
     queryFn: getKernelClient as unknown as QueryFunction<any>,
-    enabled: !!client && !!kernelAccount && !!appId,
+    enabled: !!client && !!kernelAccount && !!appId && !!entryPoint,
   });
 
   return {

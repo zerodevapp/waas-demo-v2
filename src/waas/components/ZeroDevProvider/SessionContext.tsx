@@ -9,12 +9,17 @@ import {
 } from "react";
 import { createSession, getAllSession } from "../../sessions/manageSession";
 
+import { Permission } from "@zerodev/session-key";
+import { type Abi } from "viem";
+import { type SessionType } from "../../sessions/manageSession";
+
 type UpdateSessionArgs = {
   sessionId: `0x${string}`;
   smartAccount: `0x${string}`;
   enableSignature: `0x${string}`;
-  policies: Policy[];
   sessionKey: `0x${string}`;
+  policies: Policy[];
+  permissions: Permission<Abi>[];
 };
 
 interface SessionContextValue {
@@ -26,21 +31,10 @@ interface SessionProviderProps {
   children: ReactNode;
 }
 
-export type SessionInfoType = {
-  smartAccount: `0x${string}`;
-  enableSignature: `0x${string}`;
-  policies: Policy[];
-  sessionKey: `0x${string}`;
-};
-
 export const SessionContext = createContext<SessionContextValue>({
   sessions: {},
   updateSession: () => {},
 });
-
-export type SessionType = {
-  [sessionId: `0x${string}`]: SessionInfoType;
-};
 
 export function SessionProvider({ children }: SessionProviderProps) {
   const [sessions, setSessions] = useState<SessionType>({});
@@ -56,12 +50,14 @@ export function SessionProvider({ children }: SessionProviderProps) {
     enableSignature,
     policies,
     sessionKey,
+    permissions,
   }: UpdateSessionArgs) {
     createSession(
       sessionId,
       smartAccount,
       enableSignature,
       policies,
+      permissions,
       sessionKey
     );
     setSessions((prev) => ({
@@ -71,6 +67,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         enableSignature,
         policies,
         sessionKey,
+        permissions,
       },
     }));
   }
