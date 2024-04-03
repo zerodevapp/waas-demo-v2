@@ -1,4 +1,5 @@
 import { useCreateKernelClientEOA } from "@/waas";
+import { KernelVersionType } from "@/waas/types";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useConnect } from "wagmi";
@@ -11,10 +12,14 @@ export enum SignerType {
   Passkey = "PASSKEY",
 }
 
-export default function ConnectSigner() {
+export default function ConnectSigner({
+  version,
+}: {
+  version: KernelVersionType;
+}) {
   const { connectors } = useConnect();
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
-  const { connect, error } = useCreateKernelClientEOA({ version: "v2" });
+  const { connect, error } = useCreateKernelClientEOA({ version });
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);

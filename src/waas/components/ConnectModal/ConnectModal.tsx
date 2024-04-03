@@ -1,9 +1,11 @@
+import { KernelVersionType } from "@/waas/types";
 import { Modal } from "@mantine/core";
 import ConnectSigner from "./ConnectSigner";
 
 export interface ConnectModalProps {
   open: boolean;
   onClose: () => void;
+  version: KernelVersionType;
 }
 
 export enum ConnectStep {
@@ -11,7 +13,7 @@ export enum ConnectStep {
   Permission = "PERMISSION",
 }
 
-export function ConnectModal({ onClose, open }: ConnectModalProps) {
+export function ConnectModal({ onClose, open, version }: ConnectModalProps) {
   const titleId = "Connect";
 
   return (
@@ -22,7 +24,7 @@ export function ConnectModal({ onClose, open }: ConnectModalProps) {
       }}
       title={titleId}
     >
-      <ConnectSigner />
+      <ConnectSigner version={version} />
     </Modal>
   );
 }

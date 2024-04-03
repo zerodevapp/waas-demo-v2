@@ -1,7 +1,8 @@
 import { useConnectModal, useKernelAccount } from "@/waas";
+import { type KernelVersionType } from "@/waas/types";
 import { Button } from "@mantine/core";
 
-export function ConnectButton() {
+export function ConnectButton({ version }: { version: KernelVersionType }) {
   const { kernelAccount, setValidator, setKernelAccount } = useKernelAccount();
   const { openConnectModal } = useConnectModal();
 
@@ -15,7 +16,7 @@ export function ConnectButton() {
           localStorage.removeItem("kernel_validator");
           localStorage.removeItem("kernel_account");
         } else {
-          openConnectModal?.();
+          openConnectModal?.({ version });
         }
       }}
     >

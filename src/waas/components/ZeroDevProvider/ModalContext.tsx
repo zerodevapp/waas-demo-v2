@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { KernelVersionType } from "../../types";
 import { ConnectModal } from "../ConnectModal/ConnectModal";
 import { SessionModal } from "../SessionModal";
 
@@ -26,7 +27,7 @@ export function useModalStateValue() {
 
 interface ModalContextValue {
   connectModalOpen: boolean;
-  openConnectModal?: () => void;
+  openConnectModal?: ({ version }: { version: KernelVersionType }) => void;
   sessionModalOpen: boolean;
   openSessionModal?: ({ policies }: { policies: Policy[] | undefined }) => void;
 }
@@ -43,6 +44,7 @@ interface ModalProviderProps {
 export function ModalProvider({ children }: ModalProviderProps) {
   const { kernelAccount, validator } = useKernelAccount();
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [kernelVersion, setKernelVersion] = useState<KernelVersionType>("v3");
 
   const {
     closeModal: closeConnectModal,
@@ -69,25 +71,37 @@ export function ModalProvider({ children }: ModalProviderProps) {
     [openSessionModal]
   );
 
+  const openConnectModalWithVersion = useCallback(
+    ({ version }: { version: KernelVersionType }) => {
+      setKernelVersion(version);
+      openConnectModal();
+    },
+    [openConnectModal]
+  );
+
   return (
     <ModalContext.Provider
       value={useMemo(
         () => ({
           connectModalOpen,
-          openConnectModal,
+          openConnectModal: openConnectModalWithVersion,
           sessionModalOpen,
           openSessionModal: openSessionModalWithPolicy,
         }),
         [
           connectModalOpen,
-          openConnectModal,
+          openConnectModalWithVersion,
           sessionModalOpen,
           openSessionModalWithPolicy,
         ]
       )}
     >
       {children}
-      <ConnectModal onClose={closeConnectModal} open={connectModalOpen} />
+      <ConnectModal
+        onClose={closeConnectModal}
+        open={connectModalOpen}
+        version={kernelVersion}
+      />
       <SessionModal
         onClose={closeSessionModal}
         open={sessionModalOpen}
