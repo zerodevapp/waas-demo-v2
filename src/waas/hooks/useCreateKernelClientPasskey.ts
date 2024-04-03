@@ -1,6 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import {
-  WEBAUTHN_VALIDATOR_ADDRESS_V07,
   createPasskeyValidator,
   getPasskeyValidator,
 } from "@zerodev/passkey-validator";
@@ -9,12 +8,17 @@ import type { EntryPoint } from "permissionless/types";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
-import { getEntryPoint } from "../utils/entryPoint";
+import { type KernelVersionType } from "../types";
+import { getEntryPointFromVersion } from "../utils/entryPoint";
+import { getWeb3AuthNValidatorFromVersion } from "../utils/webauthn";
 import { useAppId } from "./useAppId";
 import { useKernelAccount } from "./useKernelAccount";
 
 type PasskeConnectType = "register" | "login";
 
+export type UseCreateKernelClientPasskeyArg = {
+  version: KernelVersionType;
+};
 export type CreateKernelClientPasskeyArgs = {
   username: string | undefined;
 };
@@ -24,6 +28,7 @@ export type UseCreateKernelClientPasskeyKey = {
   publicClient: PublicClient | undefined | null;
   appId: string | undefined | null;
   type: PasskeConnectType | undefined | null;
+  version: KernelVersionType;
 };
 
 function mutationKey({ ...config }: UseCreateKernelClientPasskeyKey) {
@@ -41,12 +46,14 @@ function mutationKey({ ...config }: UseCreateKernelClientPasskeyKey) {
 }
 
 async function mutationFn(config: UseCreateKernelClientPasskeyKey) {
-  const { username, publicClient, appId, type } = config;
+  const { username, publicClient, appId, type, version } = config;
 
   if (!publicClient || !appId) {
     throw new Error("missing publicClient or appId");
   }
   let passkeyValidator: KernelValidator<EntryPoint>;
+  const entryPoint = getEntryPointFromVersion(version);
+  const webauthnValidator = getWeb3AuthNValidatorFromVersion(version);
 
   if (type === "register") {
     if (!username) {
@@ -55,30 +62,32 @@ async function mutationFn(config: UseCreateKernelClientPasskeyKey) {
     passkeyValidator = await createPasskeyValidator(publicClient, {
       passkeyName: username,
       passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId}`,
-      entryPoint: getEntryPoint(),
-      validatorAddress: WEBAUTHN_VALIDATOR_ADDRESS_V07,
+      entryPoint: entryPoint,
+      validatorAddress: webauthnValidator,
     });
   } else {
     passkeyValidator = await getPasskeyValidator(publicClient!, {
       passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId!}`,
-      entryPoint: getEntryPoint(),
-      validatorAddress: WEBAUTHN_VALIDATOR_ADDRESS_V07,
+      entryPoint: entryPoint,
+      validatorAddress: webauthnValidator,
     });
   }
 
-  const account = await createKernelAccount(publicClient, {
-    entryPoint: getEntryPoint(),
+  const kernelAccount = await createKernelAccount(publicClient, {
+    entryPoint: entryPoint,
     plugins: {
       sudo: passkeyValidator,
-      entryPoint: getEntryPoint(),
+      entryPoint: entryPoint,
     },
   });
 
-  return { validator: passkeyValidator, kernelAccount: account };
+  return { validator: passkeyValidator, kernelAccount, entryPoint };
 }
 
-export function useCreateKernelClientPasskey() {
-  const { setValidator, setKernelAccount } = useKernelAccount();
+export function useCreateKernelClientPasskey({
+  version,
+}: UseCreateKernelClientPasskeyArg) {
+  const { setValidator, setKernelAccount, setEntryPoint } = useKernelAccount();
   const { appId } = useAppId();
   const client = usePublicClient();
 
@@ -88,6 +97,7 @@ export function useCreateKernelClientPasskey() {
       publicClient: client,
       username: undefined,
       type: undefined,
+      version,
     }),
     mutationFn,
   });
@@ -98,9 +108,10 @@ export function useCreateKernelClientPasskey() {
         appId,
         publicClient: client,
         username,
+        version,
         type: "register",
       });
-  }, [appId, mutate, client]);
+  }, [appId, mutate, client, version]);
 
   const connectLogin = useMemo(() => {
     return () =>
@@ -109,15 +120,17 @@ export function useCreateKernelClientPasskey() {
         publicClient: client,
         username: undefined,
         type: "login",
+        version,
       });
-  }, [appId, mutate, client]);
+  }, [appId, mutate, client, version]);
 
   useEffect(() => {
     if (data) {
       setValidator(data.validator);
       setKernelAccount(data.kernelAccount);
+      setEntryPoint(data.entryPoint);
     }
-  }, [data, setValidator, setKernelAccount]);
+  }, [data, setValidator, setKernelAccount, setEntryPoint]);
 
   return {
     ...result,

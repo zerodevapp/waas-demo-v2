@@ -6,8 +6,9 @@ export default function PasskeySigner() {
   const [username, setUsername] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { connectRegister, connectLogin, error } =
-    useCreateKernelClientPasskey();
+  const { connectRegister, connectLogin, error } = useCreateKernelClientPasskey(
+    { version: "v2" }
+  );
 
   useEffect(() => {
     setIsRegistering(false);
