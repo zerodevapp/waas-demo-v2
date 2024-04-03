@@ -18,7 +18,7 @@ export default function SmartAccountBlock() {
       <Title order={3}>Smart Account</Title>
       <div className="mb-4">Address: {kernelAccount!.address}</div>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
-        <ConnectButton />
+        <ConnectButton version="v3" />
         <Button
           variant="outline"
           disabled={isLoading || !write}
