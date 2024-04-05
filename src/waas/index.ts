@@ -18,6 +18,8 @@ export { useSessionPermission } from "./hooks/useSessionPermission";
 
 export { useCreateSession } from "./hooks/useCreateSession";
 
+export { useCreateBasicSession } from "./hooks/useCreateBasicSession";
+
 export { useSessions } from "./hooks/useSessions";
 
 export { useZeroDevConfig } from "./hooks/useZeroDevConfig";
