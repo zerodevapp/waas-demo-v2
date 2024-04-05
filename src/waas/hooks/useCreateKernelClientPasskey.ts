@@ -8,10 +8,10 @@ import type { EntryPoint } from "permissionless/types";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
+import { useSetKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { type KernelVersionType } from "../types";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
 import { getWeb3AuthNValidatorFromVersion } from "../utils/webauthn";
-import { useSetKernelAccountClient } from "./useSetKernelAccountClient";
 import { useZeroDevConfig } from "./useZeroDevConfig";
 
 type PasskeConnectType = "register" | "login";
@@ -92,7 +92,7 @@ export function useCreateKernelClientPasskey({
     setKernelAccount,
     setEntryPoint,
     setKernelAccountClient,
-  } = useSetKernelAccountClient();
+  } = useSetKernelAccount();
   const { appId } = useZeroDevConfig();
   const client = usePublicClient();
 

@@ -6,9 +6,9 @@ import { walletClientToSmartAccountSigner } from "permissionless";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
 import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
+import { useSetKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { type KernelVersionType } from "../types";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
-import { useSetKernelAccountClient } from "./useSetKernelAccountClient";
 
 export type UseCreateKernelClientEOAArg = {
   version: KernelVersionType;
@@ -73,7 +73,7 @@ export function useCreateKernelClientEOA({
     setKernelAccount,
     setEntryPoint,
     setKernelAccountClient,
-  } = useSetKernelAccountClient();
+  } = useSetKernelAccount();
   const config = useConfig();
   const client = usePublicClient();
 

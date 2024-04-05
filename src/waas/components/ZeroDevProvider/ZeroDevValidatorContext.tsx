@@ -4,7 +4,14 @@ import {
   KernelValidator,
 } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
-import { ReactNode, createContext, useEffect, useMemo, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useDisconnect } from "wagmi";
 
 interface ZeroDevValidatorValue {
@@ -113,4 +120,20 @@ export function ZeroDevValidatorProvider({
       {children}
     </ZeroDevValidatorContext.Provider>
   );
+}
+
+export function useSetKernelAccount() {
+  const {
+    setKernelAccount,
+    setEntryPoint,
+    setValidator,
+    setKernelAccountClient,
+  } = useContext(ZeroDevValidatorContext);
+
+  return {
+    setKernelAccountClient,
+    setKernelAccount,
+    setEntryPoint,
+    setValidator,
+  };
 }
