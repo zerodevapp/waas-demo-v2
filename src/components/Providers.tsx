@@ -23,7 +23,9 @@ export default function Providers({ children }: { children: ReactNode }) {
     <MantineProvider>
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <ZeroDevWaasProvider appId={zdAppId}>{children}</ZeroDevWaasProvider>
+          <ZeroDevWaasProvider appId={zdAppId} chain={sepolia}>
+            {children}
+          </ZeroDevWaasProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </MantineProvider>

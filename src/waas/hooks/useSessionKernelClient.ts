@@ -11,15 +11,14 @@ import {
 import { bundlerActions } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { type EntryPoint } from "permissionless/types";
-import { createClient, http, type PublicClient } from "viem";
+import { createClient, http, type Chain, type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
-import { sepolia } from "wagmi/chains";
 import { getSessionKernelAccount } from "../sessions/getSessionKernelAccount";
 import { type SessionType } from "../sessions/manageSession";
-import { useAppId } from "./useAppId";
 import { useKernelAccount } from "./useKernelAccount";
 import { useSessions } from "./useSessions";
+import { useZeroDevConfig } from "./useZeroDevConfig";
 
 export type UseSessionKernelClientArgs = {
   sessionId: `0x${string}` | null | undefined;
@@ -29,6 +28,7 @@ export type SessionKernelClientKey = [
   key: string,
   params: {
     appId: string | undefined | null;
+    chain: Chain | null;
     validator: KernelValidator<EntryPoint> | undefined | null;
     kernelAddress: string | undefined | null;
     publicClient: PublicClient | undefined | null;
@@ -45,6 +45,7 @@ async function getSessionKernelClient({
     _key,
     {
       appId,
+      chain,
       publicClient,
       sessionId,
       validator,
@@ -54,6 +55,9 @@ async function getSessionKernelClient({
     },
   ] = queryKey;
 
+  if (!appId || !chain) {
+    throw new Error("appId and chain are required");
+  }
   if (!entryPoint) {
     throw new Error("entryPoint is required");
   }
@@ -89,17 +93,17 @@ async function getSessionKernelClient({
   });
   const kernelClient = createKernelAccountClient({
     account: kernelAccount,
-    chain: sepolia,
+    chain: chain,
     bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
+      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
     ),
     entryPoint: entryPoint,
     middleware: {
       gasPrice: async () => {
         const client = createClient({
-          chain: sepolia,
+          chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
+            `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
           ),
         })
           .extend(bundlerActions(entryPoint))
@@ -109,9 +113,9 @@ async function getSessionKernelClient({
       sponsorUserOperation: async ({ userOperation }) => {
         const kernelPaymaster = createZeroDevPaymasterClient({
           entryPoint: entryPoint,
-          chain: sepolia,
+          chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId!}?paymasterProvider=PIMLICO`
+            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
           ),
         });
         return kernelPaymaster.sponsorUserOperation({
@@ -128,7 +132,7 @@ async function getSessionKernelClient({
 export function useSessionKernelClient({
   sessionId,
 }: UseSessionKernelClientArgs) {
-  const { appId } = useAppId();
+  const { appId, chain } = useZeroDevConfig();
   const client = usePublicClient();
   const { validator, kernelAccount, entryPoint } = useKernelAccount();
   const session = useSessions();
@@ -144,12 +148,18 @@ export function useSessionKernelClient({
         validator,
         session,
         appId,
+        chain,
         entryPoint,
       },
     ],
     queryFn: getSessionKernelClient as unknown as QueryFunction<any>,
     enabled:
-      !!client && !!validator && !!appId && !!kernelAddress && !!entryPoint,
+      !!client &&
+      !!validator &&
+      !!appId &&
+      !!kernelAddress &&
+      !!entryPoint &&
+      !!chain,
   });
 
   return {

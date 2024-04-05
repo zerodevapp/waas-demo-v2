@@ -11,8 +11,8 @@ import { usePublicClient } from "wagmi";
 import { type KernelVersionType } from "../types";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
 import { getWeb3AuthNValidatorFromVersion } from "../utils/webauthn";
-import { useAppId } from "./useAppId";
 import { useKernelAccount } from "./useKernelAccount";
+import { useZeroDevConfig } from "./useZeroDevConfig";
 
 type PasskeConnectType = "register" | "login";
 
@@ -88,7 +88,7 @@ export function useCreateKernelClientPasskey({
   version,
 }: UseCreateKernelClientPasskeyArg) {
   const { setValidator, setKernelAccount, setEntryPoint } = useKernelAccount();
-  const { appId } = useAppId();
+  const { appId } = useZeroDevConfig();
   const client = usePublicClient();
 
   const { data, mutate, ...result } = useMutation({

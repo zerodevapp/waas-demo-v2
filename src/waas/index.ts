@@ -20,7 +20,7 @@ export { useCreateSession } from "./hooks/useCreateSession";
 
 export { useSessions } from "./hooks/useSessions";
 
-export { useAppId } from "./hooks/useAppId";
+export { useZeroDevConfig } from "./hooks/useZeroDevConfig";
 
 export { useKernelClient } from "./hooks/useKernelClient";
 
