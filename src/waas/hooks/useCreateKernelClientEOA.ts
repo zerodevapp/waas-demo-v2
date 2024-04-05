@@ -8,7 +8,7 @@ import { type PublicClient } from "viem";
 import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
 import { type KernelVersionType } from "../types";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
-import { useKernelAccount } from "./useKernelAccount";
+import { useSetKernelAccountClient } from "./useSetKernelAccountClient";
 
 export type UseCreateKernelClientEOAArg = {
   version: KernelVersionType;
@@ -68,7 +68,12 @@ async function mutationFn(config: UseCreateKernelClientEOAKey) {
 export function useCreateKernelClientEOA({
   version,
 }: UseCreateKernelClientEOAArg) {
-  const { setValidator, setKernelAccount, setEntryPoint } = useKernelAccount();
+  const {
+    setValidator,
+    setKernelAccount,
+    setEntryPoint,
+    setKernelAccountClient,
+  } = useSetKernelAccountClient();
   const config = useConfig();
   const client = usePublicClient();
 
@@ -97,8 +102,15 @@ export function useCreateKernelClientEOA({
       setValidator(data.validator);
       setKernelAccount(data.kernelAccount);
       setEntryPoint(data.entryPoint);
+      setKernelAccountClient(null);
     }
-  }, [data, setValidator, setKernelAccount, setEntryPoint]);
+  }, [
+    data,
+    setValidator,
+    setKernelAccount,
+    setEntryPoint,
+    setKernelAccountClient,
+  ]);
 
   return {
     ...result,

@@ -1,12 +1,12 @@
 "use client";
-import { ConnectButton, useKernelAccount, useSendUserOperation } from "@/waas";
+import { ConnectButton, useKernelClient, useSendUserOperation } from "@/waas";
 import { Button, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { parseAbi } from "viem";
 
 export default function SmartAccountBlock() {
   const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount } = useKernelAccount();
+  const { kernelClient } = useKernelClient();
   const { data, write, error } = useSendUserOperation();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);
@@ -16,7 +16,7 @@ export default function SmartAccountBlock() {
   return (
     <>
       <Title order={3}>Smart Account</Title>
-      <div className="mb-4">Address: {kernelAccount!.address}</div>
+      <div className="mb-4">Address: {kernelClient?.account.address}</div>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
         <ConnectButton version="v3" />
         <Button
@@ -30,14 +30,14 @@ export default function SmartAccountBlock() {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelAccount!.address],
+                args: [kernelClient?.account.address],
                 value: 0n,
               },
               {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelAccount!.address],
+                args: [kernelClient?.account.address],
                 value: 0n,
               },
             ]);

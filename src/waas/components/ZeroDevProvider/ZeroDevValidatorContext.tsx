@@ -1,5 +1,9 @@
-import { KernelSmartAccount, KernelValidator } from "@zerodev/sdk";
-import type { EntryPoint } from "permissionless/types";
+import {
+  KernelAccountClient,
+  KernelSmartAccount,
+  KernelValidator,
+} from "@zerodev/sdk";
+import { EntryPoint } from "permissionless/types";
 import { ReactNode, createContext, useEffect, useMemo, useState } from "react";
 import { useDisconnect } from "wagmi";
 
@@ -10,6 +14,10 @@ interface ZeroDevValidatorValue {
   setKernelAccount: (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => void;
+  kernelAccountClient: KernelAccountClient<EntryPoint> | null;
+  setKernelAccountClient: (
+    kernelAccountClient: KernelAccountClient<EntryPoint> | null
+  ) => void;
   entryPoint: EntryPoint | null;
   setEntryPoint: (entryPoint: EntryPoint | null) => void;
 }
@@ -19,6 +27,8 @@ export const ZeroDevValidatorContext = createContext<ZeroDevValidatorValue>({
   setValidator: () => {},
   kernelAccount: null,
   setKernelAccount: () => {},
+  kernelAccountClient: null,
+  setKernelAccountClient: () => {},
   entryPoint: null,
   setEntryPoint: () => {},
 });
@@ -35,6 +45,8 @@ export function ZeroDevValidatorProvider({
     useState<KernelValidator<EntryPoint> | null>(null);
   const [kernelAccount, setKernelAccount] =
     useState<KernelSmartAccount<EntryPoint> | null>(null);
+  const [kernelAccountClient, setKernelAccountClient] =
+    useState<KernelAccountClient<EntryPoint> | null>(null);
   const [entryPoint, setEntryPoint] = useState<EntryPoint | null>(null);
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
@@ -57,6 +69,20 @@ export function ZeroDevValidatorProvider({
     // }
   };
 
+  const updateKernelAccountClient = (
+    kernelAccountClient: KernelAccountClient<EntryPoint> | null
+  ) => {
+    if (!kernelAccountClient) {
+      setKernelAccountClient(null);
+      return;
+    }
+    const account = kernelAccountClient.account;
+    if (account) {
+      setKernelAccountClient(kernelAccountClient);
+      setEntryPoint(account.entryPoint);
+    }
+  };
+
   useEffect(() => {
     const storedValidator = localStorage.getItem("kernel_validator");
     const storedAccount = localStorage.getItem("kernel_account");
@@ -76,10 +102,12 @@ export function ZeroDevValidatorProvider({
           setValidator: updateValidator,
           kernelAccount,
           setKernelAccount: updateKernelAccount,
+          kernelAccountClient,
+          setKernelAccountClient: updateKernelAccountClient,
           entryPoint,
           setEntryPoint,
         }),
-        [validator, kernelAccount, entryPoint]
+        [validator, kernelAccount, kernelAccountClient, entryPoint]
       )}
     >
       {children}

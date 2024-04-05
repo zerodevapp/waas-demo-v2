@@ -1,16 +1,18 @@
 import { useConnectModal, useKernelAccount } from "@/waas";
+import { useSetKernelAccountClient } from "@/waas/hooks/useSetKernelAccountClient";
 import { type KernelVersionType } from "@/waas/types";
 import { Button } from "@mantine/core";
 
 export function ConnectButton({ version }: { version: KernelVersionType }) {
-  const { kernelAccount, setValidator, setKernelAccount } = useKernelAccount();
+  const { isConnected } = useKernelAccount();
+  const { setValidator, setKernelAccount } = useSetKernelAccountClient();
   const { openConnectModal } = useConnectModal();
 
   return (
     <Button
       variant="outline"
       onClick={() => {
-        if (kernelAccount) {
+        if (isConnected) {
           setValidator(null);
           setKernelAccount(null);
           localStorage.removeItem("kernel_validator");
@@ -20,7 +22,7 @@ export function ConnectButton({ version }: { version: KernelVersionType }) {
         }
       }}
     >
-      {kernelAccount ? "Disconnect" : "Connect"}
+      {isConnected ? "Disconnect" : "Connect"}
     </Button>
   );
 }

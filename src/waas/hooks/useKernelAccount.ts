@@ -2,22 +2,14 @@ import { useContext } from "react";
 import { ZeroDevValidatorContext } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 
 export function useKernelAccount() {
-  const {
-    validator,
-    setValidator,
-    kernelAccount,
-    setKernelAccount,
-    entryPoint,
-    setEntryPoint,
-  } = useContext(ZeroDevValidatorContext);
+  const { validator, kernelAccount, kernelAccountClient, entryPoint } =
+    useContext(ZeroDevValidatorContext);
 
   return {
     validator,
-    setValidator,
     kernelAccount,
-    setKernelAccount,
+    kernelAccountClient,
     entryPoint,
-    setEntryPoint,
-    isConnected: !!kernelAccount,
+    isConnected: !!kernelAccount || !!kernelAccountClient,
   };
 }

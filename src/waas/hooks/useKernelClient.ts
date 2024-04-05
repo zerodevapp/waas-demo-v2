@@ -5,6 +5,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import {
+  KernelAccountClient,
   KernelSmartAccount,
   createKernelAccountClient,
   createZeroDevPaymasterClient,
@@ -21,6 +22,7 @@ export type KernelClientKey = [
     appId: string | undefined | null;
     chain: Chain | null;
     kernelAccount: KernelSmartAccount<EntryPoint> | undefined | null;
+    kernelAccountClient: KernelAccountClient<EntryPoint> | undefined | null;
     publicClient: PublicClient | undefined | null;
     entryPoint: EntryPoint | null;
   }
@@ -29,8 +31,24 @@ export type KernelClientKey = [
 async function getKernelClient({
   queryKey,
 }: QueryFunctionContext<KernelClientKey>) {
-  const [_key, { appId, publicClient, kernelAccount, entryPoint, chain }] =
-    queryKey;
+  const [
+    _key,
+    {
+      appId,
+      publicClient,
+      kernelAccount,
+      entryPoint,
+      chain,
+      kernelAccountClient,
+    },
+  ] = queryKey;
+
+  if (kernelAccountClient) {
+    return {
+      kernelClient: kernelAccountClient,
+      kernelAccount: kernelAccountClient.account,
+    };
+  }
 
   if (!appId || !chain || !publicClient || !kernelAccount || !entryPoint) {
     throw new Error("missing appId or kernelAccount");
@@ -75,7 +93,7 @@ async function getKernelClient({
 
 export function useKernelClient() {
   const { appId, chain } = useZeroDevConfig();
-  const { kernelAccount, entryPoint } = useKernelAccount();
+  const { kernelAccount, entryPoint, kernelAccountClient } = useKernelAccount();
   const client = usePublicClient();
 
   const { data, isLoading, error } = useQuery({
@@ -87,10 +105,11 @@ export function useKernelClient() {
         appId,
         entryPoint,
         chain,
+        kernelAccountClient,
       },
     ],
     queryFn: getKernelClient as unknown as QueryFunction<any>,
-    enabled: !!client && !!kernelAccount && !!appId && !!entryPoint && !!chain,
+    enabled: !!client && !!appId && !!entryPoint && !!chain,
   });
 
   return {

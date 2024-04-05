@@ -1,4 +1,5 @@
 "use client";
+import CreateCustomizedKernelButton from "@/components/CreateCustomizedKernelButton";
 import SessionBlock from "@/components/SessionBlock";
 import SmartAccountBlock from "@/components/SmartAccountBlock";
 import { ConnectButton, useKernelAccount } from "@/waas";
@@ -6,7 +7,7 @@ import { Switch, Text } from "@mantine/core";
 import { useState } from "react";
 
 export default function Home() {
-  const { kernelAccount } = useKernelAccount();
+  const { isConnected } = useKernelAccount();
   const [checked, setChecked] = useState(true);
 
   return (
@@ -23,8 +24,11 @@ export default function Home() {
         <Text size="xs">Please reconnect after version switched</Text>
       </div>
       <>
-        {!kernelAccount ? (
-          <ConnectButton version={checked ? "v3" : "v2"} />
+        {!isConnected ? (
+          <div className="flex flex-row justify-between space-x-4">
+            <ConnectButton version={checked ? "v3" : "v2"} />
+            <CreateCustomizedKernelButton />
+          </div>
         ) : (
           <>
             <SmartAccountBlock />
