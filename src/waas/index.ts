@@ -2,8 +2,6 @@ export { ZeroDevWaasProvider } from "./components/ZeroDevProvider/ZeroDevWaasPro
 
 export { ConnectButton } from "./components/ConnectButton/ConnectButton";
 
-export { useKernelAccount } from "./hooks/useKernelAccount";
-
 export { useConnectModal } from "./hooks/useConnectModal";
 
 export { useSessionModal } from "./hooks/useSessionModal";
@@ -21,8 +19,6 @@ export { useCreateSession } from "./hooks/useCreateSession";
 export { useCreateBasicSession } from "./hooks/useCreateBasicSession";
 
 export { useSessions } from "./hooks/useSessions";
-
-export { useZeroDevConfig } from "./hooks/useZeroDevConfig";
 
 export { useKernelClient } from "./hooks/useKernelClient";
 

@@ -2,12 +2,12 @@
 import CreateCustomizedKernelButton from "@/components/CreateCustomizedKernelButton";
 import SessionBlock from "@/components/SessionBlock";
 import SmartAccountBlock from "@/components/SmartAccountBlock";
-import { ConnectButton, useKernelAccount } from "@/waas";
+import { ConnectButton, useKernelClient } from "@/waas";
 import { Switch, Text } from "@mantine/core";
 import { useState } from "react";
 
 export default function Home() {
-  const { isConnected } = useKernelAccount();
+  const { isConnected } = useKernelClient();
   const [checked, setChecked] = useState(true);
 
   return (

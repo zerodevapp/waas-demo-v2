@@ -7,11 +7,14 @@ import {
   useMemo,
   useState,
 } from "react";
-import { createSession, getAllSession } from "../../sessions/manageSession";
+import {
+  createSession,
+  getAllSession,
+} from "../../utils/sessions/manageSession";
 
 import { Permission } from "@zerodev/session-key";
 import { type Abi } from "viem";
-import { type SessionType } from "../../sessions/manageSession";
+import { type SessionType } from "../../utils/sessions/manageSession";
 
 type UpdateSessionArgs = {
   sessionId: `0x${string}`;

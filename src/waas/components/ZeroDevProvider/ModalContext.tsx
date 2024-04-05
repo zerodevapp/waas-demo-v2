@@ -1,4 +1,3 @@
-import { useKernelAccount } from "@/waas";
 import { type Policy } from "@zerodev/permissions";
 import {
   ReactNode,
@@ -11,6 +10,7 @@ import {
 import { KernelVersionType } from "../../types";
 import { ConnectModal } from "../ConnectModal/ConnectModal";
 import { SessionModal } from "../SessionModal";
+import { useKernelAccount } from "./ZeroDevValidatorContext";
 
 export function useModalStateValue() {
   const [isModalOpen, setModalOpen] = useState(false);

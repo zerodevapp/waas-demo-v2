@@ -1,14 +1,11 @@
-import {
-  useCreateBasicSession,
-  useCreateSession,
-  useKernelAccount,
-} from "@/waas";
+import { useCreateBasicSession, useCreateSession } from "@/waas";
 import { Button, Loader, Modal } from "@mantine/core";
 import { type Policy } from "@zerodev/permissions";
 import { ParamOperator } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V06 } from "permissionless";
 import { useEffect, useState } from "react";
 import { parseAbi } from "viem";
+import { useKernelAccount } from "../ZeroDevProvider/ZeroDevValidatorContext";
 
 export interface SessionModalProps {
   open: boolean;

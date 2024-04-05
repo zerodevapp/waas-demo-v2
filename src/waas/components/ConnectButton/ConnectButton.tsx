@@ -1,5 +1,8 @@
-import { useConnectModal, useKernelAccount } from "@/waas";
-import { useSetKernelAccount } from "@/waas/components/ZeroDevProvider/ZeroDevValidatorContext";
+import { useConnectModal } from "@/waas";
+import {
+  useKernelAccount,
+  useSetKernelAccount,
+} from "@/waas/components/ZeroDevProvider/ZeroDevValidatorContext";
 import { type KernelVersionType } from "@/waas/types";
 import { Button } from "@mantine/core";
 

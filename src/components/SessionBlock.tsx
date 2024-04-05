@@ -1,6 +1,5 @@
 "use client";
 import {
-  useKernelAccount,
   useKernelClient,
   useSendUserOperationWithSession,
   useSessionModal,
@@ -13,7 +12,7 @@ import { parseAbi } from "viem";
 
 function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
   const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount } = useKernelAccount();
+  const { kernelClient } = useKernelClient();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);
   const { data, write, error } = useSendUserOperationWithSession({
@@ -36,14 +35,14 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelAccount!.address],
+                args: [kernelClient?.account.address],
                 value: 0n,
               },
               {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelAccount!.address],
+                args: [kernelClient?.account.address],
                 value: 0n,
               },
             ]);

@@ -10,9 +10,9 @@ import { type EntryPoint } from "permissionless/types";
 import { PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
-import { useKernelAccount } from "..";
-import { getSession } from "../sessions/manageSession";
+import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { getEntryPoint } from "../utils/entryPoint";
+import { getSession } from "../utils/sessions/manageSession";
 
 export type SessionPermissionKey = [
   key: string,

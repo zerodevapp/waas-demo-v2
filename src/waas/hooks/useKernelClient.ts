@@ -1,4 +1,3 @@
-import { useKernelAccount, useZeroDevConfig } from "@/waas";
 import {
   QueryFunction,
   QueryFunctionContext,
@@ -15,6 +14,8 @@ import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { type EntryPoint } from "permissionless/types";
 import { createClient, http, type Chain, type PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
+import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
+import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 
 export type KernelClientKey = [
   key: string,
@@ -114,6 +115,7 @@ export function useKernelClient() {
 
   return {
     ...data,
+    isConnected: !!data?.kernelClient && !!data?.kernelAccount,
     isLoading,
     error,
   };

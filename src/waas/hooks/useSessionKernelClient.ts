@@ -14,11 +14,11 @@ import { type EntryPoint } from "permissionless/types";
 import { createClient, http, type Chain, type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
-import { getSessionKernelAccount } from "../sessions/getSessionKernelAccount";
-import { type SessionType } from "../sessions/manageSession";
-import { useKernelAccount } from "./useKernelAccount";
+import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
+import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
+import { getSessionKernelAccount } from "../utils/sessions/getSessionKernelAccount";
+import { type SessionType } from "../utils/sessions/manageSession";
 import { useSessions } from "./useSessions";
-import { useZeroDevConfig } from "./useZeroDevConfig";
 
 export type UseSessionKernelClientArgs = {
   sessionId: `0x${string}` | null | undefined;

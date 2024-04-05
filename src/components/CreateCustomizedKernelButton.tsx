@@ -1,4 +1,4 @@
-import { useZeroDevConfig } from "@/waas";
+import { useZeroDevConfig } from "@/waas/components/ZeroDevProvider/ZeroDevAppContext";
 import { useSetKernelAccountClient } from "@/waas/hooks/useSetKernelAccountClient";
 import { Button } from "@mantine/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";

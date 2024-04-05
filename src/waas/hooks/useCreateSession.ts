@@ -1,4 +1,3 @@
-import { useKernelAccount } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
 import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
@@ -9,8 +8,9 @@ import { type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useUpdateSession } from "../components/ZeroDevProvider/SessionContext";
-import { createSessionKernelAccount } from "../sessions/createSessionKernelAccount";
-import { createSessionKey } from "../sessions/manageSession";
+import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
+import { createSessionKernelAccount } from "../utils/sessions/createSessionKernelAccount";
+import { createSessionKey } from "../utils/sessions/manageSession";
 
 export type CreateSessionWriteArgs = {
   policies?: Policy[];
