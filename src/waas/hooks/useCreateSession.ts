@@ -1,6 +1,6 @@
 import { useKernelAccount } from "@/waas";
 import { useMutation } from "@tanstack/react-query";
-import { type Policy } from "@zerodev/permission-validator";
+import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
 import { type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V06, ENTRYPOINT_ADDRESS_V07 } from "permissionless";

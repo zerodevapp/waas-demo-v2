@@ -3,11 +3,8 @@ import {
   QueryFunctionContext,
   useQuery,
 } from "@tanstack/react-query";
-import {
-  toPermissionValidator,
-  type Policy,
-} from "@zerodev/permission-validator";
-import { toECDSASigner } from "@zerodev/permission-validator/signers";
+import { toPermissionValidator, type Policy } from "@zerodev/permissions";
+import { toECDSASigner } from "@zerodev/permissions/signers";
 import { KernelValidator, createKernelAccount } from "@zerodev/sdk";
 import { type EntryPoint } from "permissionless/types";
 import { PublicClient } from "viem";

@@ -1,8 +1,5 @@
-import { type Policy } from "@zerodev/permission-validator";
-import {
-  toGasPolicy,
-  toSudoPolicy,
-} from "@zerodev/permission-validator/policies";
+import { type Policy } from "@zerodev/permissions";
+import { toGasPolicy, toSudoPolicy } from "@zerodev/permissions/policies";
 import { useEffect, useState } from "react";
 import { parseGwei } from "viem";
 
@@ -17,13 +14,13 @@ export function useMockedPolicy() {
   useEffect(() => {
     const getMockPolicy = async () => {
       const gasPolicyMeta = ["1000000000", "100000000"];
-      const firstGasPolicy = await toGasPolicy({
+      const firstGasPolicy = toGasPolicy({
         allowed: parseGwei(gasPolicyMeta[0]),
       });
-      const secondGasPolicy = await toGasPolicy({
+      const secondGasPolicy = toGasPolicy({
         allowed: parseGwei(gasPolicyMeta[1]),
       });
-      const sudoPolicy = await toSudoPolicy({});
+      const sudoPolicy = toSudoPolicy({});
       const firstPolicies = {
         maxGasAllowedInWei: gasPolicyMeta[0],
         policy: [firstGasPolicy, sudoPolicy],

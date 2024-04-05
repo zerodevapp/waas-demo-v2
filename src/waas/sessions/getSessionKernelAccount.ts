@@ -1,8 +1,5 @@
-import {
-  toPermissionValidator,
-  type Policy,
-} from "@zerodev/permission-validator";
-import { toECDSASigner } from "@zerodev/permission-validator/signers";
+import { toPermissionValidator, type Policy } from "@zerodev/permissions";
+import { toECDSASigner } from "@zerodev/permissions/signers";
 import {
   KernelAccountAbi,
   KernelV3ExecuteAbi,
@@ -72,8 +69,8 @@ export const getSessionKernelAccount = async ({
       sudo: sudoValidator,
       regular: sessionValidator,
       entryPoint: entryPoint,
-      executorData: {
-        executor: zeroAddress,
+      action: {
+        address: zeroAddress,
         selector: executeDataSelector,
       },
       pluginEnableSignature: enableSignature,

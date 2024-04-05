@@ -1,4 +1,4 @@
-import { type Policy } from "@zerodev/permission-validator";
+import { type Policy } from "@zerodev/permissions";
 import {
   ReactNode,
   createContext,

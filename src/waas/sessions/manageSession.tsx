@@ -1,4 +1,4 @@
-import { type Policy } from "@zerodev/permission-validator";
+import { type Policy } from "@zerodev/permissions";
 import { type Permission } from "@zerodev/session-key";
 import { type Abi } from "viem";
 import { generatePrivateKey } from "viem/accounts";

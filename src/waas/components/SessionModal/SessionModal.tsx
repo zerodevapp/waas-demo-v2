@@ -1,6 +1,6 @@
 import { useCreateSession, useKernelAccount } from "@/waas";
 import { Button, Loader, Modal } from "@mantine/core";
-import { type Policy } from "@zerodev/permission-validator";
+import { type Policy } from "@zerodev/permissions";
 import { ParamOperator } from "@zerodev/session-key";
 import { useEffect, useState } from "react";
 import { parseAbi } from "viem";

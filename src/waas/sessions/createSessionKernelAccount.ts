@@ -1,7 +1,4 @@
-import {
-  type PermissionPlugin,
-  type Policy,
-} from "@zerodev/permission-validator";
+import { type PermissionPlugin, type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
 import { SessionKeyPlugin, type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V06, ENTRYPOINT_ADDRESS_V07 } from "permissionless";
@@ -57,7 +54,7 @@ export const createSessionKernelAccount = async ({
         kernelAccount.address
       );
     const sessionKeyData = (
-      sessionValidator as SessionKeyPlugin
+      sessionValidator as SessionKeyPlugin<EntryPoint>
     ).getPluginSerializationParams();
     const sessionId = slice(
       keccak256(
@@ -90,7 +87,7 @@ export const createSessionKernelAccount = async ({
     );
   const sessionId = (
     sessionValidator as PermissionPlugin<EntryPoint>
-  ).getPermissionId();
+  ).getIdentifier();
   return {
     sessionId,
     smartAccount: kernelAccount.address,
