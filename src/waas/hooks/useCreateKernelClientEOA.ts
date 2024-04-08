@@ -8,7 +8,7 @@ import {
 } from "@zerodev/sdk";
 import { walletClientToSmartAccountSigner } from "permissionless";
 import { EntryPoint } from "permissionless/types";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { type PublicClient } from "viem";
 import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
 import { useSetKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
@@ -116,6 +116,12 @@ export function useCreateKernelClientEOA({
       version,
     }),
     mutationFn,
+    onSuccess: (data) => {
+      setValidator(data.validator);
+      setKernelAccount(data.kernelAccount);
+      setEntryPoint(data.entryPoint);
+      setKernelAccountClient(null);
+    },
   });
 
   const connect = useMemo(() => {
@@ -127,21 +133,6 @@ export function useCreateKernelClientEOA({
         version,
       });
   }, [config, mutate, client, version]);
-
-  useEffect(() => {
-    if (data) {
-      setValidator(data.validator);
-      setKernelAccount(data.kernelAccount);
-      setEntryPoint(data.entryPoint);
-      setKernelAccountClient(null);
-    }
-  }, [
-    data,
-    setValidator,
-    setKernelAccount,
-    setEntryPoint,
-    setKernelAccountClient,
-  ]);
 
   return {
     ...result,

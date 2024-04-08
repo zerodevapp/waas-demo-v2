@@ -9,7 +9,7 @@ import {
   type KernelValidator,
 } from "@zerodev/sdk";
 import type { EntryPoint } from "permissionless/types";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { type PublicClient } from "viem";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
@@ -130,6 +130,12 @@ export function useCreateKernelClientPasskey({
       version,
     }),
     mutationFn,
+    onSuccess: (data) => {
+      setValidator(data.validator);
+      setKernelAccount(data.kernelAccount);
+      setEntryPoint(data.entryPoint);
+      setKernelAccountClient(null);
+    },
   });
 
   const connectRegister = useMemo(() => {
@@ -153,21 +159,6 @@ export function useCreateKernelClientPasskey({
         version,
       });
   }, [appId, mutate, client, version]);
-
-  useEffect(() => {
-    if (data) {
-      setValidator(data.validator);
-      setKernelAccount(data.kernelAccount);
-      setEntryPoint(data.entryPoint);
-      setKernelAccountClient(null);
-    }
-  }, [
-    data,
-    setValidator,
-    setKernelAccount,
-    setEntryPoint,
-    setKernelAccountClient,
-  ]);
 
   return {
     ...result,
