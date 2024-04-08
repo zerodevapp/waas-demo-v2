@@ -1,12 +1,12 @@
-import { useKernelClient } from "@/waas";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import type { Config } from "@wagmi/core";
 import { type WriteContractParameters } from "@wagmi/core";
 import { KernelAccountClient, KernelSmartAccount } from "@zerodev/sdk";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, type Hash } from "viem";
 import { ResolvedRegister } from "wagmi";
+import { useKernelClient } from "./useKernelClient";
 
 export type SendUserOperationWriteArgs = WriteContractParameters[];
 
@@ -15,6 +15,20 @@ export type UseSendUserOperationArgs = {
   kernelClient: KernelAccountClient<EntryPoint> | null;
   kernelAccount: KernelSmartAccount<EntryPoint> | null;
 };
+
+export type SendUserOperationReturnType = Hash;
+
+export type UseSendUserOperationReturnType = {
+  write: ((parameters: SendUserOperationWriteArgs) => void) | undefined;
+} & Omit<
+  UseMutationResult<
+    SendUserOperationReturnType,
+    unknown,
+    UseSendUserOperationArgs,
+    unknown
+  >,
+  "mutate"
+>;
 
 function mutationKey({ ...config }: UseSendUserOperationArgs) {
   const { kernelAccount, kernelClient, parameters } = config;
@@ -29,7 +43,9 @@ function mutationKey({ ...config }: UseSendUserOperationArgs) {
   ] as const;
 }
 
-async function mutationFn(config: UseSendUserOperationArgs) {
+async function mutationFn(
+  config: UseSendUserOperationArgs
+): Promise<SendUserOperationReturnType> {
   const { kernelAccount, kernelClient, parameters } = config;
 
   if (!kernelClient || !kernelAccount) {
@@ -52,7 +68,7 @@ async function mutationFn(config: UseSendUserOperationArgs) {
 export function useSendUserOperation<
   config extends Config = ResolvedRegister["config"],
   context = unknown
->() {
+>(): UseSendUserOperationReturnType {
   const { kernelAccount, kernelClient } = useKernelClient();
 
   const { mutate, ...result } = useMutation({

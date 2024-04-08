@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
 import { type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V06 } from "permissionless";
@@ -23,6 +24,27 @@ export type UseCreateBasicSessionKey = {
   entryPoint: EntryPoint | null;
 };
 
+type UseCreateBasicSessionReturnType = {
+  write?: (policies: CreateBasicSessionWriteArgs) => void;
+} & Omit<
+  UseMutationResult<
+    CreateBasicSessionReturnType,
+    unknown,
+    UseCreateBasicSessionKey,
+    unknown
+  >,
+  "mutate"
+>;
+
+export type CreateBasicSessionReturnType = {
+  sessionKey: `0x${string}`;
+  sessionId: `0x${string}`;
+  smartAccount: `0x${string}`;
+  enableSignature: `0x${string}`;
+  policies: Policy[];
+  permissions: Permission<Abi>[];
+};
+
 function mutationKey({ ...config }: UseCreateBasicSessionKey) {
   const { policies, client, validator, entryPoint } = config;
 
@@ -37,7 +59,9 @@ function mutationKey({ ...config }: UseCreateBasicSessionKey) {
   ] as const;
 }
 
-async function mutationFn(config: UseCreateBasicSessionKey) {
+async function mutationFn(
+  config: UseCreateBasicSessionKey
+): Promise<CreateBasicSessionReturnType> {
   const { policies, validator, client, entryPoint } = config;
 
   if (!validator || !client || !entryPoint) {
@@ -66,7 +90,7 @@ async function mutationFn(config: UseCreateBasicSessionKey) {
   };
 }
 
-export function useCreateBasicSession() {
+export function useCreateBasicSession(): UseCreateBasicSessionReturnType {
   const { validator, entryPoint } = useKernelAccount();
   const client = usePublicClient();
   const { updateSession } = useUpdateSession();

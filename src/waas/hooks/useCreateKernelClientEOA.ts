@@ -1,8 +1,13 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { connect, getAccount, getWalletClient } from "@wagmi/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
-import { createKernelAccount } from "@zerodev/sdk";
+import {
+  createKernelAccount,
+  KernelSmartAccount,
+  KernelValidator,
+} from "@zerodev/sdk";
 import { walletClientToSmartAccountSigner } from "permissionless";
+import { EntryPoint } from "permissionless/types";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
 import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
@@ -25,6 +30,24 @@ export type UseCreateKernelClientEOAKey = {
   version: KernelVersionType;
 };
 
+export type CreateKernelClientEOAReturnType = {
+  validator: KernelValidator<EntryPoint>;
+  kernelAccount: KernelSmartAccount<EntryPoint>;
+  entryPoint: EntryPoint;
+};
+
+export type UseCreateKernelClientEOAReturnType = {
+  connect: ({ connector }: CreateKernelClientEOAArgs) => void;
+} & Omit<
+  UseMutationResult<
+    CreateKernelClientEOAReturnType,
+    unknown,
+    UseCreateKernelClientEOAKey,
+    unknown
+  >,
+  "mutate"
+>;
+
 function mutationKey({ ...config }: UseCreateKernelClientEOAKey) {
   const { connector, wagmiConfig } = config;
 
@@ -37,7 +60,9 @@ function mutationKey({ ...config }: UseCreateKernelClientEOAKey) {
   ] as const;
 }
 
-async function mutationFn(config: UseCreateKernelClientEOAKey) {
+async function mutationFn(
+  config: UseCreateKernelClientEOAKey
+): Promise<CreateKernelClientEOAReturnType> {
   const { wagmiConfig, connector, publicClient, version } = config;
 
   if (!wagmiConfig || !connector || !publicClient) {
@@ -67,7 +92,7 @@ async function mutationFn(config: UseCreateKernelClientEOAKey) {
 
 export function useCreateKernelClientEOA({
   version,
-}: UseCreateKernelClientEOAArg) {
+}: UseCreateKernelClientEOAArg): UseCreateKernelClientEOAReturnType {
   const {
     setValidator,
     setKernelAccount,
@@ -115,7 +140,6 @@ export function useCreateKernelClientEOA({
   return {
     ...result,
     data,
-    mutate,
     connect,
   };
 }

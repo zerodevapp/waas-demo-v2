@@ -1,10 +1,11 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
+import { type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import { type PublicClient } from "viem";
+import { type Abi, type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useUpdateSession } from "../components/ZeroDevProvider/SessionContext";
@@ -23,6 +24,27 @@ export type UseCreateSessionKey = {
   entryPoint: EntryPoint | null;
 };
 
+export type CreateSessionReturnType = {
+  sessionKey: `0x${string}`;
+  sessionId: `0x${string}`;
+  smartAccount: `0x${string}`;
+  enableSignature: `0x${string}`;
+  policies: Policy[];
+  permissions: Permission<Abi>[];
+};
+
+export type UseCreateSessionReturnType = {
+  write?: (policies: CreateSessionWriteArgs) => void;
+} & Omit<
+  UseMutationResult<
+    CreateSessionReturnType,
+    unknown,
+    UseCreateSessionKey,
+    unknown
+  >,
+  "mutate"
+>;
+
 function mutationKey({ ...config }: UseCreateSessionKey) {
   const { policies, client, validator, entryPoint } = config;
 
@@ -37,7 +59,9 @@ function mutationKey({ ...config }: UseCreateSessionKey) {
   ] as const;
 }
 
-async function mutationFn(config: UseCreateSessionKey) {
+async function mutationFn(
+  config: UseCreateSessionKey
+): Promise<CreateSessionReturnType> {
   const { policies, validator, client, entryPoint } = config;
 
   if (!validator || !client || !entryPoint) {
@@ -66,7 +90,7 @@ async function mutationFn(config: UseCreateSessionKey) {
   };
 }
 
-export function useCreateSession() {
+export function useCreateSession(): UseCreateSessionReturnType {
   const { validator, entryPoint } = useKernelAccount();
   const client = usePublicClient();
   const { updateSession } = useUpdateSession();

@@ -29,9 +29,20 @@ export type KernelClientKey = [
   }
 ];
 
+export type GetKernelClientReturnType = {
+  kernelAccount: KernelSmartAccount<EntryPoint> | null;
+  kernelClient: KernelAccountClient<EntryPoint>;
+};
+
+export type UseKernelClientReturnType = GetKernelClientReturnType & {
+  isConnected: boolean;
+  isLoading: boolean;
+  error: unknown;
+};
+
 async function getKernelClient({
   queryKey,
-}: QueryFunctionContext<KernelClientKey>) {
+}: QueryFunctionContext<KernelClientKey>): Promise<GetKernelClientReturnType> {
   const [
     _key,
     {
@@ -47,7 +58,7 @@ async function getKernelClient({
   if (kernelAccountClient) {
     return {
       kernelClient: kernelAccountClient,
-      kernelAccount: kernelAccountClient.account,
+      kernelAccount: kernelAccountClient.account ?? null,
     };
   }
 
@@ -88,11 +99,11 @@ async function getKernelClient({
         });
       },
     },
-  });
+  }) as KernelAccountClient<EntryPoint>;
   return { kernelClient, kernelAccount };
 }
 
-export function useKernelClient() {
+export function useKernelClient(): UseKernelClientReturnType {
   const { appId, chain } = useZeroDevConfig();
   const { kernelAccount, entryPoint, kernelAccountClient } = useKernelAccount();
   const client = usePublicClient();

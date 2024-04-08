@@ -6,6 +6,8 @@ import {
 import {
   createKernelAccountClient,
   createZeroDevPaymasterClient,
+  type KernelAccountClient,
+  type KernelSmartAccount,
   type KernelValidator,
 } from "@zerodev/sdk";
 import { bundlerActions } from "permissionless";
@@ -37,6 +39,17 @@ export type SessionKernelClientKey = [
     entryPoint: EntryPoint | null;
   }
 ];
+
+export type GetSessionKernelClientReturnType = {
+  kernelClient: KernelAccountClient<EntryPoint>;
+  kernelAccount: KernelSmartAccount<EntryPoint>;
+};
+
+export type UseSessionKernelClientReturnType =
+  GetSessionKernelClientReturnType & {
+    isLoading: boolean;
+    error: unknown;
+  };
 
 async function getSessionKernelClient({
   queryKey,
@@ -131,7 +144,7 @@ async function getSessionKernelClient({
 
 export function useSessionKernelClient({
   sessionId,
-}: UseSessionKernelClientArgs) {
+}: UseSessionKernelClientArgs): UseSessionKernelClientReturnType {
   const { appId, chain } = useZeroDevConfig();
   const client = usePublicClient();
   const { validator, kernelAccount, entryPoint } = useKernelAccount();

@@ -1,9 +1,13 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import {
   createPasskeyValidator,
   getPasskeyValidator,
 } from "@zerodev/passkey-validator";
-import { createKernelAccount, type KernelValidator } from "@zerodev/sdk";
+import {
+  createKernelAccount,
+  KernelSmartAccount,
+  type KernelValidator,
+} from "@zerodev/sdk";
 import type { EntryPoint } from "permissionless/types";
 import { useEffect, useMemo } from "react";
 import { type PublicClient } from "viem";
@@ -31,6 +35,25 @@ export type UseCreateKernelClientPasskeyKey = {
   version: KernelVersionType;
 };
 
+export type CreateKernelClientPasskeyReturnType = {
+  validator: KernelValidator<EntryPoint>;
+  kernelAccount: KernelSmartAccount<EntryPoint>;
+  entryPoint: EntryPoint;
+};
+
+export type UseCreateKernelClientPasskeyReturnType = {
+  connectRegister: ({ username }: CreateKernelClientPasskeyArgs) => void;
+  connectLogin: () => void;
+} & Omit<
+  UseMutationResult<
+    CreateKernelClientPasskeyReturnType,
+    unknown,
+    UseCreateKernelClientPasskeyKey,
+    unknown
+  >,
+  "mutate"
+>;
+
 function mutationKey({ ...config }: UseCreateKernelClientPasskeyKey) {
   const { username, publicClient, appId, type } = config;
 
@@ -45,7 +68,9 @@ function mutationKey({ ...config }: UseCreateKernelClientPasskeyKey) {
   ] as const;
 }
 
-async function mutationFn(config: UseCreateKernelClientPasskeyKey) {
+async function mutationFn(
+  config: UseCreateKernelClientPasskeyKey
+): Promise<CreateKernelClientPasskeyReturnType> {
   const { username, publicClient, appId, type, version } = config;
 
   if (!publicClient || !appId) {
@@ -86,7 +111,7 @@ async function mutationFn(config: UseCreateKernelClientPasskeyKey) {
 
 export function useCreateKernelClientPasskey({
   version,
-}: UseCreateKernelClientPasskeyArg) {
+}: UseCreateKernelClientPasskeyArg): UseCreateKernelClientPasskeyReturnType {
   const {
     setValidator,
     setKernelAccount,
@@ -147,7 +172,6 @@ export function useCreateKernelClientPasskey({
   return {
     ...result,
     data,
-    mutate,
     connectRegister,
     connectLogin,
   };

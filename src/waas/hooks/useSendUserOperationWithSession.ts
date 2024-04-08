@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { type WriteContractParameters } from "@wagmi/core";
 import {
   type KernelAccountClient,
@@ -6,7 +6,7 @@ import {
 } from "@zerodev/sdk";
 import { type EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, type Hash } from "viem";
 import { useSessionKernelClient } from "./useSessionKernelClient";
 
 export type UseSendUserOperationWithSessionArgs = {
@@ -21,6 +21,22 @@ export type UseSendUserOperationWithSessionKey = {
   kernelAccount: KernelSmartAccount<EntryPoint> | undefined;
 };
 
+export type SendUserOperationWithSessionReturnType = Hash;
+
+export type UseSendUserOperationWithSessionReturnType = {
+  write:
+    | ((parameters: SendUserOperationWithSessionWriteArgs) => void)
+    | undefined;
+} & Omit<
+  UseMutationResult<
+    SendUserOperationWithSessionReturnType,
+    unknown,
+    UseSendUserOperationWithSessionKey,
+    unknown
+  >,
+  "mutate"
+>;
+
 function mutationKey({ ...config }: UseSendUserOperationWithSessionKey) {
   const { parameters, kernelClient, kernelAccount } = config;
 
@@ -34,7 +50,9 @@ function mutationKey({ ...config }: UseSendUserOperationWithSessionKey) {
   ] as const;
 }
 
-async function mutationFn(config: UseSendUserOperationWithSessionKey) {
+async function mutationFn(
+  config: UseSendUserOperationWithSessionKey
+): Promise<SendUserOperationWithSessionReturnType> {
   const { parameters, kernelClient, kernelAccount } = config;
 
   if (!kernelClient || !kernelAccount) {
@@ -58,7 +76,7 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 
 export function useSendUserOperationWithSession({
   sessionId,
-}: UseSendUserOperationWithSessionArgs) {
+}: UseSendUserOperationWithSessionArgs): UseSendUserOperationWithSessionReturnType {
   const {
     kernelClient,
     kernelAccount,
