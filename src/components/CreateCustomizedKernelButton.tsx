@@ -1,5 +1,5 @@
 import { useZeroDevConfig } from "@/waas/components/ZeroDevProvider/ZeroDevAppContext";
-import { useSetKernelAccountClient } from "@/waas/hooks/useSetKernelAccountClient";
+import { useSetKernelClient } from "@/waas/hooks/useSetKernelClient";
 import { Button } from "@mantine/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import {
@@ -27,7 +27,7 @@ export default function CreateCustomizedKernelButton() {
   const [isLoading, setIsLoading] = useState(false);
   const { chain, appId } = useZeroDevConfig();
   const publicClient = usePublicClient();
-  const { setKernelAccountClient } = useSetKernelAccountClient();
+  const { setKernelClient } = useSetKernelClient();
 
   const createKernelClient = async () => {
     if (!publicClient || !chain || !appId) return;
@@ -89,7 +89,7 @@ export default function CreateCustomizedKernelButton() {
         },
       });
 
-      setKernelAccountClient(kernelClient as KernelAccountClient<EntryPoint>);
+      setKernelClient(kernelClient as KernelAccountClient<EntryPoint>);
     } catch (err) {}
 
     setIsLoading(false);

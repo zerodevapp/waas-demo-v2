@@ -25,3 +25,5 @@ export { useKernelClient } from "./hooks/useKernelClient";
 export { useCreateKernelClientEOA } from "./hooks/useCreateKernelClientEOA";
 
 export { useCreateKernelClientPasskey } from "./hooks/useCreateKernelClientPasskey";
+
+export { useDisconnectKernelClient } from "./hooks/useDisconnectKernelClient";

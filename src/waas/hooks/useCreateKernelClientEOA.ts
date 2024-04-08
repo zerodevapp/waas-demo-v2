@@ -90,6 +90,12 @@ async function mutationFn(
   return { validator: ecdsaValidator, kernelAccount: account, entryPoint };
 }
 
+/**
+ * Hook for creating a Kernel client for an EOA.
+ *
+ * @param version - The version of the Kernel to use.
+ * @returns An object containing the `connect` function and mutation results.
+ */
 export function useCreateKernelClientEOA({
   version,
 }: UseCreateKernelClientEOAArg): UseCreateKernelClientEOAReturnType {
