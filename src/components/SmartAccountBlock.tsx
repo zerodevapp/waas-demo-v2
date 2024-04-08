@@ -16,7 +16,7 @@ export default function SmartAccountBlock() {
   return (
     <>
       <Title order={3}>Smart Account</Title>
-      <div className="mb-4">Address: {kernelClient?.account.address}</div>
+      <div className="mb-4">Address: {kernelClient?.account?.address}</div>
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
         <ConnectButton version="v3" />
         <Button
@@ -30,14 +30,14 @@ export default function SmartAccountBlock() {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelClient?.account.address],
+                args: [kernelClient?.account?.address],
                 value: 0n,
               },
               {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelClient?.account.address],
+                args: [kernelClient?.account?.address],
                 value: 0n,
               },
             ]);

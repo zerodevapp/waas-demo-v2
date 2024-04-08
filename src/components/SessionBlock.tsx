@@ -35,14 +35,14 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelClient?.account.address],
+                args: [kernelClient?.account?.address],
                 value: 0n,
               },
               {
                 address: nftAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [kernelClient?.account.address],
+                args: [kernelClient?.account?.address],
                 value: 0n,
               },
             ]);
