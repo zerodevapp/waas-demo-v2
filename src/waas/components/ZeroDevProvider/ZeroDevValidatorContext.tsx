@@ -12,6 +12,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { type Chain, type Transport } from "viem";
 import { useDisconnect } from "wagmi";
 
 interface ZeroDevValidatorValue {
@@ -21,9 +22,19 @@ interface ZeroDevValidatorValue {
   setKernelAccount: (
     kernelAccount: KernelSmartAccount<EntryPoint> | null
   ) => void;
-  kernelAccountClient: KernelAccountClient<EntryPoint> | null;
+  kernelAccountClient: KernelAccountClient<
+    EntryPoint,
+    Transport,
+    Chain,
+    KernelSmartAccount<EntryPoint>
+  > | null;
   setKernelAccountClient: (
-    kernelAccountClient: KernelAccountClient<EntryPoint> | null
+    kernelAccountClient: KernelAccountClient<
+      EntryPoint,
+      Transport,
+      Chain,
+      KernelSmartAccount<EntryPoint>
+    > | null
   ) => void;
   entryPoint: EntryPoint | null;
   setEntryPoint: (entryPoint: EntryPoint | null) => void;
@@ -53,7 +64,12 @@ export function ZeroDevValidatorProvider({
   const [kernelAccount, setKernelAccount] =
     useState<KernelSmartAccount<EntryPoint> | null>(null);
   const [kernelAccountClient, setKernelAccountClient] =
-    useState<KernelAccountClient<EntryPoint> | null>(null);
+    useState<KernelAccountClient<
+      EntryPoint,
+      Transport,
+      Chain,
+      KernelSmartAccount<EntryPoint>
+    > | null>(null);
   const [entryPoint, setEntryPoint] = useState<EntryPoint | null>(null);
 
   const updateValidator = (validator: KernelValidator<EntryPoint> | null) => {
@@ -77,7 +93,12 @@ export function ZeroDevValidatorProvider({
   };
 
   const updateKernelAccountClient = (
-    kernelAccountClient: KernelAccountClient<EntryPoint> | null
+    kernelAccountClient: KernelAccountClient<
+      EntryPoint,
+      Transport,
+      Chain,
+      KernelSmartAccount<EntryPoint>
+    > | null
   ) => {
     if (!kernelAccountClient) {
       setKernelAccountClient(null);
@@ -122,7 +143,31 @@ export function ZeroDevValidatorProvider({
   );
 }
 
-export function useSetKernelAccount() {
+export type UseSetKernelAccountHook = {
+  setKernelAccount: (
+    kernelAccount: KernelSmartAccount<EntryPoint> | null
+  ) => void;
+  setEntryPoint: (entryPoint: EntryPoint | null) => void;
+  setValidator: (validator: KernelValidator<EntryPoint> | null) => void;
+  setKernelAccountClient: (
+    kernelAccountClient: KernelAccountClient<
+      EntryPoint,
+      Transport,
+      Chain,
+      KernelSmartAccount<EntryPoint>
+    > | null
+  ) => void;
+};
+
+export type UseKernelAccountHook = {
+  validator: KernelValidator<EntryPoint> | null;
+  kernelAccount: KernelSmartAccount<EntryPoint> | null;
+  kernelAccountClient: KernelAccountClient<EntryPoint> | null;
+  entryPoint: EntryPoint | null;
+  isConnected: boolean;
+};
+
+export function useSetKernelAccount(): UseSetKernelAccountHook {
   const {
     setKernelAccount,
     setEntryPoint,
@@ -138,7 +183,7 @@ export function useSetKernelAccount() {
   };
 }
 
-export function useKernelAccount() {
+export function useKernelAccount(): UseKernelAccountHook {
   const { validator, kernelAccount, kernelAccountClient, entryPoint } =
     useContext(ZeroDevValidatorContext);
 

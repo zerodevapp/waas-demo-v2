@@ -3,6 +3,7 @@ import { useSetKernelClient } from "@/waas/hooks/useSetKernelClient";
 import { Button } from "@mantine/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import {
+  KernelSmartAccount,
   KernelV3ExecuteAbi,
   createKernelAccount,
   createKernelAccountClient,
@@ -14,6 +15,7 @@ import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { EntryPoint } from "permissionless/types";
 import { useState } from "react";
 import {
+  Transport,
   createClient,
   getAbiItem,
   http,
@@ -34,7 +36,7 @@ export default function CreateCustomizedKernelButton() {
     setIsLoading(true);
 
     try {
-      const entryPoint = ENTRYPOINT_ADDRESS_V07;
+      const entryPoint = ENTRYPOINT_ADDRESS_V07 as EntryPoint;
       const generatedAccount = privateKeyToAccount(generatePrivateKey());
       const ecdsaValidator = await signerToEcdsaValidator(publicClient, {
         entryPoint: entryPoint,
@@ -45,7 +47,6 @@ export default function CreateCustomizedKernelButton() {
         entryPoint: entryPoint,
         plugins: {
           sudo: ecdsaValidator,
-          entryPoint: entryPoint,
           action: {
             address: zeroAddress,
             selector: toFunctionSelector(
@@ -89,7 +90,14 @@ export default function CreateCustomizedKernelButton() {
         },
       });
 
-      setKernelClient(kernelClient as KernelAccountClient<EntryPoint>);
+      setKernelClient(
+        kernelClient as KernelAccountClient<
+          EntryPoint,
+          Transport,
+          typeof chain,
+          KernelSmartAccount<EntryPoint>
+        >
+      );
     } catch (err) {}
 
     setIsLoading(false);

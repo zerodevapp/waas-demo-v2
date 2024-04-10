@@ -5,7 +5,7 @@ import {
 } from "@zerodev/passkey-validator";
 import {
   createKernelAccount,
-  KernelSmartAccount,
+  type KernelSmartAccount,
   type KernelValidator,
 } from "@zerodev/sdk";
 import type { EntryPoint } from "permissionless/types";
@@ -20,11 +20,11 @@ import { getWeb3AuthNValidatorFromVersion } from "../utils/webauthn";
 
 type PasskeConnectType = "register" | "login";
 
-export type UseCreateKernelClientPasskeyArg = {
+export type UseCreateKernelClientPasskeyParameters = {
   version: KernelVersionType;
 };
-export type CreateKernelClientPasskeyArgs = {
-  username: string | undefined;
+export type CreateKernelClientPasskeyVariables = {
+  username: string;
 };
 
 export type UseCreateKernelClientPasskeyKey = {
@@ -42,7 +42,7 @@ export type CreateKernelClientPasskeyReturnType = {
 };
 
 export type UseCreateKernelClientPasskeyReturnType = {
-  connectRegister: ({ username }: CreateKernelClientPasskeyArgs) => void;
+  connectRegister: ({ username }: CreateKernelClientPasskeyVariables) => void;
   connectLogin: () => void;
 } & Omit<
   UseMutationResult<
@@ -102,7 +102,6 @@ async function mutationFn(
     entryPoint: entryPoint,
     plugins: {
       sudo: passkeyValidator,
-      entryPoint: entryPoint,
     },
   });
 
@@ -111,7 +110,7 @@ async function mutationFn(
 
 export function useCreateKernelClientPasskey({
   version,
-}: UseCreateKernelClientPasskeyArg): UseCreateKernelClientPasskeyReturnType {
+}: UseCreateKernelClientPasskeyParameters): UseCreateKernelClientPasskeyReturnType {
   const {
     setValidator,
     setKernelAccount,
@@ -139,7 +138,7 @@ export function useCreateKernelClientPasskey({
   });
 
   const connectRegister = useMemo(() => {
-    return ({ username }: CreateKernelClientPasskeyArgs) =>
+    return ({ username }: CreateKernelClientPasskeyVariables) =>
       mutate({
         appId,
         publicClient: client,
@@ -163,6 +162,7 @@ export function useCreateKernelClientPasskey({
   return {
     ...result,
     data,
+    isPending: !client || result.isPending,
     connectRegister,
     connectLogin,
   };

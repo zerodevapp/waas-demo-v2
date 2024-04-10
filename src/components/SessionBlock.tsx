@@ -7,18 +7,16 @@ import {
 } from "@/waas";
 import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Title } from "@mantine/core";
-import { useEffect, useState } from "react";
 import { parseAbi } from "viem";
 
 function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
-  const [isLoading, setIsLoading] = useState(false);
   const { kernelClient } = useKernelClient();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);
-  const { data, write, error } = useSendUserOperationWithSession({
-    sessionId,
-  });
-  useEffect(() => setIsLoading(false), [data, error]);
+  const { data, write, isDisabled, isPending } =
+    useSendUserOperationWithSession({
+      sessionId,
+    });
 
   return (
     <>
@@ -26,11 +24,10 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
         {sessionId && <p>{`Permission ID: ${sessionId}`}</p>}
         <Button
           variant="outline"
-          disabled={isLoading || !write}
-          loading={isLoading}
+          disabled={isDisabled}
+          loading={isPending}
           onClick={() => {
-            setIsLoading(true);
-            write?.([
+            write([
               {
                 address: nftAddress,
                 abi: abi,

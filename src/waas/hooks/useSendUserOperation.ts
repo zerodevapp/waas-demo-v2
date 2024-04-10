@@ -8,29 +8,29 @@ import { encodeFunctionData, type Hash } from "viem";
 import { ResolvedRegister } from "wagmi";
 import { useKernelClient } from "./useKernelClient";
 
-export type SendUserOperationWriteArgs = WriteContractParameters[];
+export type SendUserOperationVariables = WriteContractParameters[];
 
-export type UseSendUserOperationArgs = {
-  parameters: SendUserOperationWriteArgs;
-  kernelClient: KernelAccountClient<EntryPoint> | null;
-  kernelAccount: KernelSmartAccount<EntryPoint> | null;
+export type UseSendUserOperationKey = {
+  parameters: SendUserOperationVariables;
+  kernelClient: KernelAccountClient<EntryPoint> | undefined | null;
+  kernelAccount: KernelSmartAccount<EntryPoint> | undefined | null;
 };
 
 export type SendUserOperationReturnType = Hash;
 
 export type UseSendUserOperationReturnType = {
-  write: ((parameters: SendUserOperationWriteArgs) => void) | undefined;
+  write: (parameters: SendUserOperationVariables) => void;
 } & Omit<
   UseMutationResult<
     SendUserOperationReturnType,
     unknown,
-    UseSendUserOperationArgs,
+    UseSendUserOperationKey,
     unknown
   >,
   "mutate"
 >;
 
-function mutationKey({ ...config }: UseSendUserOperationArgs) {
+function mutationKey({ ...config }: UseSendUserOperationKey) {
   const { kernelAccount, kernelClient, parameters } = config;
 
   return [
@@ -44,7 +44,7 @@ function mutationKey({ ...config }: UseSendUserOperationArgs) {
 }
 
 async function mutationFn(
-  config: UseSendUserOperationArgs
+  config: UseSendUserOperationKey
 ): Promise<SendUserOperationReturnType> {
   const { kernelAccount, kernelClient, parameters } = config;
 
@@ -75,14 +75,13 @@ export function useSendUserOperation<
     mutationKey: mutationKey({
       kernelClient,
       kernelAccount,
-      parameters: {} as SendUserOperationWriteArgs,
+      parameters: {} as SendUserOperationVariables,
     }),
     mutationFn,
   });
 
   const write = useMemo(() => {
-    if (!kernelAccount || !kernelClient) return undefined;
-    return (parameters: SendUserOperationWriteArgs) => {
+    return (parameters: SendUserOperationVariables) => {
       mutate({
         parameters,
         kernelAccount,

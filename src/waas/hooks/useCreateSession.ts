@@ -1,11 +1,10 @@
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
-import { type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
-import { type Abi, type PublicClient } from "viem";
+import { type PublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useUpdateSession } from "../components/ZeroDevProvider/SessionContext";
@@ -13,13 +12,13 @@ import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidator
 import { createSessionKernelAccount } from "../utils/sessions/createSessionKernelAccount";
 import { createSessionKey } from "../utils/sessions/manageSession";
 
-export type CreateSessionWriteArgs = {
-  policies?: Policy[];
+export type CreateSessionVariables = {
+  policies: Policy[];
 };
 
 export type UseCreateSessionKey = {
   validator: KernelValidator<EntryPoint> | null;
-  policies: CreateSessionWriteArgs;
+  policies: Policy[] | undefined;
   client: PublicClient | undefined;
   entryPoint: EntryPoint | null;
 };
@@ -30,11 +29,10 @@ export type CreateSessionReturnType = {
   smartAccount: `0x${string}`;
   enableSignature: `0x${string}`;
   policies: Policy[];
-  permissions: Permission<Abi>[];
 };
 
 export type UseCreateSessionReturnType = {
-  write?: (policies: CreateSessionWriteArgs) => void;
+  write: ({ policies }: CreateSessionVariables) => void;
 } & Omit<
   UseMutationResult<
     CreateSessionReturnType,
@@ -70,7 +68,7 @@ async function mutationFn(
   if (entryPoint !== ENTRYPOINT_ADDRESS_V07) {
     throw new Error("Only kernel v3 is supported in useCreateSession");
   }
-  if (!policies.policies) {
+  if (!policies) {
     throw new Error("No policies provided");
   }
 
@@ -82,7 +80,7 @@ async function mutationFn(
     publicClient: client,
     sudoValidator: validator,
     entryPoint: entryPoint,
-    policies: policies.policies,
+    policies: policies,
   });
   return {
     sessionKey,
@@ -99,18 +97,20 @@ export function useCreateSession(): UseCreateSessionReturnType {
     mutationKey: mutationKey({
       client,
       validator,
-      policies: { policies: undefined },
+      policies: undefined,
       entryPoint,
     }),
     mutationFn,
     onSuccess: (data) => {
-      updateSession(data);
+      updateSession({
+        ...data,
+        permissions: [],
+      });
     },
   });
 
   const write = useMemo(() => {
-    if (!validator || !client || !entryPoint) return undefined;
-    return (policies: CreateSessionWriteArgs) =>
+    return ({ policies }: CreateSessionVariables) =>
       mutate({
         policies,
         client,
@@ -121,6 +121,7 @@ export function useCreateSession(): UseCreateSessionReturnType {
 
   return {
     ...result,
+    isPending: !client || result.isPending,
     write,
   };
 }

@@ -3,22 +3,11 @@ import { type Permission } from "@zerodev/session-key";
 import { type Abi } from "viem";
 import { generatePrivateKey } from "viem/accounts";
 import {
-  desirializePolicy,
-  serializePolicy,
   type EncodedSessionType,
-} from "./encodeSessionPolicy";
-
-export type SessionInfoType = {
-  smartAccount: `0x${string}`;
-  enableSignature: `0x${string}`;
-  policies: Policy[];
-  permissions: Permission<Abi>[];
-  sessionKey: `0x${string}`;
-};
-
-export type SessionType = {
-  [sessionId: `0x${string}`]: SessionInfoType;
-};
+  type SessionInfoType,
+  type SessionType,
+} from "../../types";
+import { desirializePolicy, serializePolicy } from "./encodeSessionPolicy";
 
 export function createSessionKey() {
   return generatePrivateKey();

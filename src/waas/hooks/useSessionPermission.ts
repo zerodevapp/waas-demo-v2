@@ -61,7 +61,6 @@ async function fetchPermission({
     entryPoint: getEntryPoint(),
     plugins: {
       sudo: validator!,
-      entryPoint: getEntryPoint(),
     },
   });
   const smartAccountAddress = account.address;

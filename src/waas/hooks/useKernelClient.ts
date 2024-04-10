@@ -1,6 +1,7 @@
 import {
   QueryFunction,
   QueryFunctionContext,
+  UseQueryResult,
   useQuery,
 } from "@tanstack/react-query";
 import {
@@ -12,7 +13,14 @@ import {
 import { bundlerActions } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { type EntryPoint } from "permissionless/types";
-import { createClient, http, type Chain, type PublicClient } from "viem";
+import {
+  createClient,
+  http,
+  type Address,
+  type Chain,
+  type PublicClient,
+  type Transport,
+} from "viem";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
@@ -23,22 +31,46 @@ export type KernelClientKey = [
     appId: string | undefined | null;
     chain: Chain | null;
     kernelAccount: KernelSmartAccount<EntryPoint> | undefined | null;
-    kernelAccountClient: KernelAccountClient<EntryPoint> | undefined | null;
+    kernelAccountClient:
+      | KernelAccountClient<
+          EntryPoint,
+          Transport,
+          Chain,
+          KernelSmartAccount<EntryPoint>
+        >
+      | undefined
+      | null;
     publicClient: PublicClient | undefined | null;
     entryPoint: EntryPoint | null;
   }
 ];
 
 export type GetKernelClientReturnType = {
-  kernelAccount: KernelSmartAccount<EntryPoint> | null;
-  kernelClient: KernelAccountClient<EntryPoint>;
+  address: Address;
+  kernelAccount: KernelSmartAccount<EntryPoint>;
+  kernelClient: KernelAccountClient<
+    EntryPoint,
+    Transport,
+    Chain,
+    KernelSmartAccount<EntryPoint>
+  >;
 };
 
-export type UseKernelClientReturnType = GetKernelClientReturnType & {
+export type UseKernelClientReturnType = {
+  address: Address | undefined;
+  kernelAccount: KernelSmartAccount<EntryPoint> | undefined;
+  kernelClient:
+    | KernelAccountClient<
+        EntryPoint,
+        Transport,
+        Chain,
+        KernelSmartAccount<EntryPoint>
+      >
+    | undefined;
   isConnected: boolean;
   isLoading: boolean;
   error: unknown;
-};
+} & UseQueryResult<GetKernelClientReturnType, unknown>;
 
 async function getKernelClient({
   queryKey,
@@ -58,7 +90,8 @@ async function getKernelClient({
   if (kernelAccountClient) {
     return {
       kernelClient: kernelAccountClient,
-      kernelAccount: kernelAccountClient.account ?? null,
+      kernelAccount: kernelAccountClient.account,
+      address: kernelAccountClient.account.address,
     };
   }
 
@@ -99,8 +132,13 @@ async function getKernelClient({
         });
       },
     },
-  }) as KernelAccountClient<EntryPoint>;
-  return { kernelClient, kernelAccount };
+  }) as KernelAccountClient<
+    EntryPoint,
+    Transport,
+    Chain,
+    KernelSmartAccount<EntryPoint>
+  >;
+  return { kernelClient, kernelAccount, address: kernelAccount.address };
 }
 
 export function useKernelClient(): UseKernelClientReturnType {
@@ -108,7 +146,7 @@ export function useKernelClient(): UseKernelClientReturnType {
   const { kernelAccount, entryPoint, kernelAccountClient } = useKernelAccount();
   const client = usePublicClient();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, ...result } = useQuery({
     queryKey: [
       "session_kernel_client",
       {
@@ -126,8 +164,7 @@ export function useKernelClient(): UseKernelClientReturnType {
 
   return {
     ...data,
-    isConnected: !!data?.kernelClient && !!data?.kernelAccount,
-    isLoading,
-    error,
+    isConnected: !!data?.kernelClient,
+    ...result,
   };
 }

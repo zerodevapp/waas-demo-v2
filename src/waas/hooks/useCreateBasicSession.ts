@@ -1,5 +1,4 @@
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
-import { type Policy } from "@zerodev/permissions";
 import { KernelValidator } from "@zerodev/sdk";
 import { type Permission } from "@zerodev/session-key";
 import { ENTRYPOINT_ADDRESS_V06 } from "permissionless";
@@ -13,19 +12,19 @@ import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidator
 import { createSessionKernelAccount } from "../utils/sessions/createSessionKernelAccount";
 import { createSessionKey } from "../utils/sessions/manageSession";
 
-export type CreateBasicSessionWriteArgs = {
-  permissions?: Permission<Abi>[];
+export type CreateBasicSessionVariables = {
+  permissions: Permission<Abi>[];
 };
 
 export type UseCreateBasicSessionKey = {
   validator: KernelValidator<EntryPoint> | null;
-  policies: CreateBasicSessionWriteArgs;
+  permissions: Permission<Abi>[] | undefined;
   client: PublicClient | undefined;
   entryPoint: EntryPoint | null;
 };
 
-type UseCreateBasicSessionReturnType = {
-  write?: (policies: CreateBasicSessionWriteArgs) => void;
+export type UseCreateBasicSessionReturnType = {
+  write: ({ permissions }: CreateBasicSessionVariables) => void;
 } & Omit<
   UseMutationResult<
     CreateBasicSessionReturnType,
@@ -41,19 +40,18 @@ export type CreateBasicSessionReturnType = {
   sessionId: `0x${string}`;
   smartAccount: `0x${string}`;
   enableSignature: `0x${string}`;
-  policies: Policy[];
   permissions: Permission<Abi>[];
 };
 
 function mutationKey({ ...config }: UseCreateBasicSessionKey) {
-  const { policies, client, validator, entryPoint } = config;
+  const { permissions, client, validator, entryPoint } = config;
 
   return [
     {
       entity: "CreateSession",
       client,
       validator,
-      policies,
+      permissions,
       entryPoint,
     },
   ] as const;
@@ -62,7 +60,7 @@ function mutationKey({ ...config }: UseCreateBasicSessionKey) {
 async function mutationFn(
   config: UseCreateBasicSessionKey
 ): Promise<CreateBasicSessionReturnType> {
-  const { policies, validator, client, entryPoint } = config;
+  const { permissions, validator, client, entryPoint } = config;
 
   if (!validator || !client || !entryPoint) {
     throw new Error("No validator provided");
@@ -70,7 +68,7 @@ async function mutationFn(
   if (entryPoint !== ENTRYPOINT_ADDRESS_V06) {
     throw new Error("Only kernel v2 is supported in useCreateBasicSession");
   }
-  if (!policies.permissions) {
+  if (!permissions) {
     throw new Error("No permissions provided");
   }
 
@@ -82,7 +80,7 @@ async function mutationFn(
     publicClient: client,
     sudoValidator: validator,
     entryPoint: entryPoint,
-    permissions: policies.permissions,
+    permissions: permissions,
   });
   return {
     sessionKey,
@@ -99,20 +97,22 @@ export function useCreateBasicSession(): UseCreateBasicSessionReturnType {
     mutationKey: mutationKey({
       client,
       validator,
-      policies: { permissions: undefined },
+      permissions: undefined,
       entryPoint,
     }),
     mutationFn,
     onSuccess: (data) => {
-      updateSession(data);
+      updateSession({
+        ...data,
+        policies: [],
+      });
     },
   });
 
   const write = useMemo(() => {
-    if (!validator || !client || !entryPoint) return undefined;
-    return (policies: CreateBasicSessionWriteArgs) =>
+    return ({ permissions }: CreateBasicSessionVariables) =>
       mutate({
-        policies,
+        permissions,
         client,
         validator,
         entryPoint,
@@ -121,6 +121,7 @@ export function useCreateBasicSession(): UseCreateBasicSessionReturnType {
 
   return {
     ...result,
+    isPending: !client || result.isPending,
     write,
   };
 }

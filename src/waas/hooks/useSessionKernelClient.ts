@@ -1,13 +1,14 @@
 import {
   QueryFunction,
   QueryFunctionContext,
+  UseQueryResult,
   useQuery,
 } from "@tanstack/react-query";
 import {
+  KernelAccountClient,
+  KernelSmartAccount,
   createKernelAccountClient,
   createZeroDevPaymasterClient,
-  type KernelAccountClient,
-  type KernelSmartAccount,
   type KernelValidator,
 } from "@zerodev/sdk";
 import { bundlerActions } from "permissionless";
@@ -18,12 +19,12 @@ import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
+import { type SessionType } from "../types";
 import { getSessionKernelAccount } from "../utils/sessions/getSessionKernelAccount";
-import { type SessionType } from "../utils/sessions/manageSession";
 import { useSessions } from "./useSessions";
 
-export type UseSessionKernelClientArgs = {
-  sessionId: `0x${string}` | null | undefined;
+export type UseSessionKernelClientParameters = {
+  sessionId?: `0x${string}` | null | undefined;
 };
 
 export type SessionKernelClientKey = [
@@ -45,11 +46,12 @@ export type GetSessionKernelClientReturnType = {
   kernelAccount: KernelSmartAccount<EntryPoint>;
 };
 
-export type UseSessionKernelClientReturnType =
-  GetSessionKernelClientReturnType & {
-    isLoading: boolean;
-    error: unknown;
-  };
+export type UseSessionKernelClientReturnType = {
+  kernelClient: KernelAccountClient<EntryPoint>;
+  kernelAccount: KernelSmartAccount<EntryPoint>;
+  isLoading: boolean;
+  error: unknown;
+} & UseQueryResult<GetSessionKernelClientReturnType, unknown>;
 
 async function getSessionKernelClient({
   queryKey,
@@ -144,20 +146,20 @@ async function getSessionKernelClient({
 
 export function useSessionKernelClient({
   sessionId,
-}: UseSessionKernelClientArgs): UseSessionKernelClientReturnType {
+}: UseSessionKernelClientParameters = {}): UseSessionKernelClientReturnType {
   const { appId, chain } = useZeroDevConfig();
   const client = usePublicClient();
   const { validator, kernelAccount, entryPoint } = useKernelAccount();
   const session = useSessions();
   const kernelAddress = kernelAccount?.address;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, ...result } = useQuery({
     queryKey: [
       "session_kernel_client",
       {
         publicClient: client,
         kernelAddress,
-        sessionId,
+        sessionId: sessionId,
         validator,
         session,
         appId,
@@ -177,7 +179,6 @@ export function useSessionKernelClient({
 
   return {
     ...data,
-    isLoading,
-    error,
+    ...result,
   };
 }

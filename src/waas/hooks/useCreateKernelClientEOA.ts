@@ -10,21 +10,27 @@ import { walletClientToSmartAccountSigner } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
 import { type PublicClient } from "viem";
-import { useConfig, usePublicClient, type Config, type Connector } from "wagmi";
+import {
+  useConfig,
+  usePublicClient,
+  type Config,
+  type Connector,
+  type CreateConnectorFn,
+} from "wagmi";
 import { useSetKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { type KernelVersionType } from "../types";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
 
-export type UseCreateKernelClientEOAArg = {
+export type UseCreateKernelClientEOAParameters = {
   version: KernelVersionType;
 };
 
-export type CreateKernelClientEOAArgs = {
-  connector: Connector | undefined;
+export type CreateKernelClientEOAVariables = {
+  connector: Connector | CreateConnectorFn;
 };
 
 export type UseCreateKernelClientEOAKey = {
-  connector: Connector | null | undefined;
+  connector: Connector | CreateConnectorFn | null | undefined;
   wagmiConfig: Config | undefined | null;
   publicClient: PublicClient | undefined | null;
   version: KernelVersionType;
@@ -37,7 +43,7 @@ export type CreateKernelClientEOAReturnType = {
 };
 
 export type UseCreateKernelClientEOAReturnType = {
-  connect: ({ connector }: CreateKernelClientEOAArgs) => void;
+  connect: ({ connector }: CreateKernelClientEOAVariables) => void;
 } & Omit<
   UseMutationResult<
     CreateKernelClientEOAReturnType,
@@ -83,22 +89,15 @@ async function mutationFn(
     entryPoint: entryPoint,
     plugins: {
       sudo: ecdsaValidator,
-      entryPoint: entryPoint,
     },
   });
 
   return { validator: ecdsaValidator, kernelAccount: account, entryPoint };
 }
 
-/**
- * Hook for creating a Kernel client for an EOA.
- *
- * @param version - The version of the Kernel to use.
- * @returns An object containing the `connect` function and mutation results.
- */
 export function useCreateKernelClientEOA({
   version,
-}: UseCreateKernelClientEOAArg): UseCreateKernelClientEOAReturnType {
+}: UseCreateKernelClientEOAParameters): UseCreateKernelClientEOAReturnType {
   const {
     setValidator,
     setKernelAccount,
@@ -125,7 +124,7 @@ export function useCreateKernelClientEOA({
   });
 
   const connect = useMemo(() => {
-    return ({ connector }: CreateKernelClientEOAArgs) =>
+    return ({ connector }: CreateKernelClientEOAVariables) =>
       mutate({
         connector,
         wagmiConfig: config,
@@ -138,5 +137,6 @@ export function useCreateKernelClientEOA({
     ...result,
     data,
     connect,
+    isPending: !client || result.isPending,
   };
 }
