@@ -9,6 +9,7 @@ import {
   KernelSmartAccount,
   createKernelAccountClient,
   createZeroDevPaymasterClient,
+  gasTokenAddresses,
   type KernelValidator,
 } from "@zerodev/sdk";
 import { bundlerActions } from "permissionless";
@@ -19,12 +20,17 @@ import { privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
-import { type SessionType } from "../types";
+import {
+  type PaymasterERC20,
+  type PaymasterSPONSOR,
+  type SessionType,
+} from "../types";
 import { getSessionKernelAccount } from "../utils/sessions/getSessionKernelAccount";
 import { useSessions } from "./useSessions";
 
 export type UseSessionKernelClientParameters = {
   sessionId?: `0x${string}` | null | undefined;
+  paymaster?: PaymasterERC20 | PaymasterSPONSOR;
 };
 
 export type SessionKernelClientKey = [
@@ -35,7 +41,7 @@ export type SessionKernelClientKey = [
     validator: KernelValidator<EntryPoint> | undefined | null;
     kernelAddress: string | undefined | null;
     publicClient: PublicClient | undefined | null;
-    sessionId: `0x${string}` | null | undefined;
+    parameters: UseSessionKernelClientParameters;
     session: SessionType | undefined;
     entryPoint: EntryPoint | null;
   }
@@ -62,13 +68,14 @@ async function getSessionKernelClient({
       appId,
       chain,
       publicClient,
-      sessionId,
+      parameters,
       validator,
       session,
       kernelAddress,
       entryPoint,
     },
   ] = queryKey;
+  const { sessionId, paymaster } = parameters;
 
   if (!appId || !chain) {
     throw new Error("appId and chain are required");
@@ -126,6 +133,9 @@ async function getSessionKernelClient({
         return (await client.getUserOperationGasPrice()).fast;
       },
       sponsorUserOperation: async ({ userOperation }) => {
+        let gasToken;
+        if (!paymaster?.type) return userOperation;
+
         const kernelPaymaster = createZeroDevPaymasterClient({
           entryPoint: entryPoint,
           chain: chain,
@@ -133,9 +143,22 @@ async function getSessionKernelClient({
             `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
           ),
         });
+        if (paymaster.type === "ERC20") {
+          const chainId = chain.id as keyof typeof gasTokenAddresses;
+          if (
+            !(chainId in gasTokenAddresses) ||
+            !(paymaster.gasToken in gasTokenAddresses[chainId])
+          ) {
+            throw new Error("ERC20 token not supported");
+          }
+          gasToken =
+            paymaster.gasToken as keyof (typeof gasTokenAddresses)[typeof chainId];
+        }
+
         return kernelPaymaster.sponsorUserOperation({
           userOperation,
           entryPoint: entryPoint,
+          gasToken: gasToken,
         });
       },
     },
@@ -144,9 +167,9 @@ async function getSessionKernelClient({
   return { kernelClient, kernelAccount };
 }
 
-export function useSessionKernelClient({
-  sessionId,
-}: UseSessionKernelClientParameters = {}): UseSessionKernelClientReturnType {
+export function useSessionKernelClient(
+  parameters: UseSessionKernelClientParameters = {}
+): UseSessionKernelClientReturnType {
   const { appId, chain } = useZeroDevConfig();
   const client = usePublicClient();
   const { validator, kernelAccount, entryPoint } = useKernelAccount();
@@ -159,7 +182,7 @@ export function useSessionKernelClient({
       {
         publicClient: client,
         kernelAddress,
-        sessionId: sessionId,
+        parameters,
         validator,
         session,
         appId,

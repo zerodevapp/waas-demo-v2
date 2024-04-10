@@ -16,6 +16,9 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
   const { data, write, isDisabled, isPending } =
     useSendUserOperationWithSession({
       sessionId,
+      paymaster: {
+        type: "SPONSOR",
+      },
     });
 
   return (

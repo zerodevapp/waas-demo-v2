@@ -10,7 +10,16 @@ import { parseAbi } from "viem";
 
 export default function SmartAccountBlock() {
   const { address } = useKernelClient();
-  const { data: hash, write, isPending } = useSendUserOperation();
+  const {
+    data: hash,
+    write,
+    error,
+    isPending,
+  } = useSendUserOperation({
+    paymaster: {
+      type: "SPONSOR",
+    },
+  });
   const { data } = useBalance();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);

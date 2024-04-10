@@ -9,6 +9,7 @@ import {
   KernelSmartAccount,
   createKernelAccountClient,
   createZeroDevPaymasterClient,
+  gasTokenAddresses,
 } from "@zerodev/sdk";
 import { bundlerActions } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
@@ -24,6 +25,7 @@ import {
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
+import { PaymasterERC20, PaymasterSPONSOR } from "../types";
 
 export type KernelClientKey = [
   key: string,
@@ -42,6 +44,7 @@ export type KernelClientKey = [
       | null;
     publicClient: PublicClient | undefined | null;
     entryPoint: EntryPoint | null;
+    parameters: UseKernelClientParameters;
   }
 ];
 
@@ -54,6 +57,10 @@ export type GetKernelClientReturnType = {
     Chain,
     KernelSmartAccount<EntryPoint>
   >;
+};
+
+export type UseKernelClientParameters = {
+  paymaster?: PaymasterERC20 | PaymasterSPONSOR;
 };
 
 export type UseKernelClientReturnType = {
@@ -84,6 +91,7 @@ async function getKernelClient({
       entryPoint,
       chain,
       kernelAccountClient,
+      parameters: { paymaster },
     },
   ] = queryKey;
 
@@ -119,6 +127,9 @@ async function getKernelClient({
         return (await client.getUserOperationGasPrice()).fast;
       },
       sponsorUserOperation: async ({ userOperation }) => {
+        let gasToken;
+        if (!paymaster?.type) return userOperation;
+
         const kernelPaymaster = createZeroDevPaymasterClient({
           entryPoint: entryPoint,
           chain: chain,
@@ -126,9 +137,22 @@ async function getKernelClient({
             `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId!}?paymasterProvider=PIMLICO`
           ),
         });
+        if (paymaster.type === "ERC20") {
+          const chainId = chain.id as keyof typeof gasTokenAddresses;
+          if (
+            !(chainId in gasTokenAddresses) ||
+            !(paymaster.gasToken in gasTokenAddresses[chainId])
+          ) {
+            throw new Error("ERC20 token not supported");
+          }
+          gasToken =
+            paymaster.gasToken as keyof (typeof gasTokenAddresses)[typeof chainId];
+        }
+
         return kernelPaymaster.sponsorUserOperation({
           userOperation,
           entryPoint: entryPoint,
+          gasToken: gasToken,
         });
       },
     },
@@ -141,7 +165,9 @@ async function getKernelClient({
   return { kernelClient, kernelAccount, address: kernelAccount.address };
 }
 
-export function useKernelClient(): UseKernelClientReturnType {
+export function useKernelClient(
+  parameters: UseKernelClientParameters = {}
+): UseKernelClientReturnType {
   const { appId, chain } = useZeroDevConfig();
   const { kernelAccount, entryPoint, kernelAccountClient } = useKernelAccount();
   const client = usePublicClient();
@@ -151,6 +177,7 @@ export function useKernelClient(): UseKernelClientReturnType {
       "session_kernel_client",
       {
         publicClient: client,
+        parameters,
         kernelAccount,
         appId,
         entryPoint,
