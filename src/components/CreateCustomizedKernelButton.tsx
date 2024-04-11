@@ -1,5 +1,6 @@
 import { useZeroDevConfig } from "@/waas/components/ZeroDevProvider/ZeroDevAppContext";
 import { useSetKernelClient } from "@/waas/hooks/useSetKernelClient";
+import { ZERODEV_BUNDLER_URL, ZERODEV_PAYMASTER_URL } from "@/waas/utils/constants";
 import { Button } from "@mantine/core";
 import { signerToEcdsaValidator } from "@zerodev/ecdsa-validator";
 import {
@@ -10,17 +11,15 @@ import {
   createZeroDevPaymasterClient,
   type KernelAccountClient,
 } from "@zerodev/sdk";
-import { ENTRYPOINT_ADDRESS_V07, bundlerActions } from "permissionless";
-import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
+import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useState } from "react";
 import {
   Transport,
-  createClient,
   getAbiItem,
   http,
   toFunctionSelector,
-  zeroAddress,
+  zeroAddress
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { usePublicClient } from "wagmi";
@@ -59,27 +58,16 @@ export default function CreateCustomizedKernelButton() {
         account: kernelAccount,
         chain: chain,
         bundlerTransport: http(
-          `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
+          `${ZERODEV_BUNDLER_URL}/${appId}`
         ),
         entryPoint: entryPoint,
         middleware: {
-          gasPrice: async () => {
-            const client = createClient({
-              chain: chain,
-              transport: http(
-                `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
-              ),
-            })
-              .extend(bundlerActions(entryPoint))
-              .extend(pimlicoBundlerActions(entryPoint));
-            return (await client.getUserOperationGasPrice()).fast;
-          },
           sponsorUserOperation: async ({ userOperation }) => {
             const kernelPaymaster = createZeroDevPaymasterClient({
               entryPoint: entryPoint,
               chain: chain,
               transport: http(
-                `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
+                `${ZERODEV_PAYMASTER_URL}/${appId}`
               ),
             });
             return kernelPaymaster.sponsorUserOperation({

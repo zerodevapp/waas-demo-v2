@@ -11,16 +11,13 @@ import {
   createZeroDevPaymasterClient,
   gasTokenAddresses,
 } from "@zerodev/sdk";
-import { bundlerActions } from "permissionless";
-import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import { type EntryPoint } from "permissionless/types";
 import {
-  createClient,
   http,
   type Address,
   type Chain,
   type PublicClient,
-  type Transport,
+  type Transport
 } from "viem";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
@@ -111,22 +108,9 @@ async function getKernelClient({
   const kernelClient = createKernelAccountClient({
     account: kernelAccount,
     chain: chain,
-    bundlerTransport: http(
-      `${ZERODEV_BUNDLER_URL}/${appId!}?paymasterProvider=PIMLICO`
-    ),
+    bundlerTransport: http(`${ZERODEV_BUNDLER_URL}/${appId!}`),
     entryPoint: entryPoint,
     middleware: {
-      gasPrice: async () => {
-        const client = createClient({
-          chain: chain,
-          transport: http(
-            `${ZERODEV_BUNDLER_URL}/${appId!}?paymasterProvider=PIMLICO`
-          ),
-        })
-          .extend(bundlerActions(entryPoint))
-          .extend(pimlicoBundlerActions(entryPoint));
-        return (await client.getUserOperationGasPrice()).fast;
-      },
       sponsorUserOperation: async ({ userOperation }) => {
         let gasToken;
         if (!paymaster?.type) return userOperation;
@@ -134,9 +118,7 @@ async function getKernelClient({
         const kernelPaymaster = createZeroDevPaymasterClient({
           entryPoint: entryPoint,
           chain: chain,
-          transport: http(
-            `${ZERODEV_PAYMASTER_URL}/${appId!}?paymasterProvider=PIMLICO`
-          ),
+          transport: http(`${ZERODEV_PAYMASTER_URL}/${appId!}`),
         });
         if (paymaster.type === "ERC20") {
           const chainId = chain.id as keyof typeof gasTokenAddresses;
