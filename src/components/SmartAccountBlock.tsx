@@ -19,8 +19,8 @@ export default function SmartAccountBlock() {
     paymaster: paymasterConfig,
   });
   const { data } = useBalance();
-  const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
-  const abi = parseAbi(["function mint(address _to) public"]);
+  const tokenAddress = "0x3870419Ba2BBf0127060bCB37f69A1b1C090992B";
+  const abi = parseAbi(["function mint(address _to, uint256 amount) public"]);
 
   useEffect(() => {
     if (error) {
@@ -48,17 +48,17 @@ export default function SmartAccountBlock() {
           onClick={() => {
             write([
               {
-                address: nftAddress,
+                address: tokenAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [address],
+                args: [address, 1],
                 value: 0n,
               },
               {
-                address: nftAddress,
+                address: tokenAddress,
                 abi: abi,
                 functionName: "mint",
-                args: [address],
+                args: [address, 1],
                 value: 0n,
               },
             ]);

@@ -1,6 +1,7 @@
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 import { type WriteContractParameters } from "@wagmi/core";
 import {
+  getCustomNonceKeyFromString,
   type KernelAccountClient,
   type KernelSmartAccount,
 } from "@zerodev/sdk";
@@ -8,11 +9,13 @@ import { type EntryPoint } from "permissionless/types";
 import { useMemo } from "react";
 import { encodeFunctionData, type Hash } from "viem";
 import { type PaymasterERC20, type PaymasterSPONSOR } from "../types";
+import { generateRandomString } from "../utils";
 import { useSessionKernelClient } from "./useSessionKernelClient";
 
 export type UseSendUserOperationWithSessionParameters = {
   sessionId?: `0x${string}` | null | undefined;
   paymaster?: PaymasterERC20 | PaymasterSPONSOR;
+  isParallel?: boolean;
 };
 
 export type SendUserOperationWithSessionVariables = WriteContractParameters[];
@@ -21,6 +24,8 @@ export type UseSendUserOperationWithSessionKey = {
   variables: SendUserOperationWithSessionVariables;
   kernelClient: KernelAccountClient<EntryPoint> | undefined;
   kernelAccount: KernelSmartAccount<EntryPoint> | undefined;
+  isParallel: boolean;
+  seed: string;
 };
 
 export type SendUserOperationWithSessionReturnType = Hash;
@@ -39,7 +44,7 @@ export type UseSendUserOperationWithSessionReturnType = {
 >;
 
 function mutationKey({ ...config }: UseSendUserOperationWithSessionKey) {
-  const { variables, kernelClient, kernelAccount } = config;
+  const { variables, kernelClient, kernelAccount, isParallel, seed } = config;
 
   return [
     {
@@ -47,15 +52,26 @@ function mutationKey({ ...config }: UseSendUserOperationWithSessionKey) {
       variables,
       kernelClient,
       kernelAccount,
+      isParallel,
+      seed,
     },
   ] as const;
 }
 
 async function mutationFn(config: UseSendUserOperationWithSessionKey) {
-  const { variables, kernelClient, kernelAccount } = config;
+  const { variables, kernelClient, kernelAccount, isParallel, seed } = config;
 
   if (!kernelClient || !kernelAccount) {
     throw new Error("Kernel Client is required");
+  }
+  let nonce;
+
+  if (isParallel) {
+    const customNonceKey = getCustomNonceKeyFromString(
+      seed,
+      kernelAccount.entryPoint
+    );
+    nonce = await kernelAccount.getNonce(customNonceKey);
   }
 
   const userOpHash = await kernelClient.sendUserOperation({
@@ -67,6 +83,7 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
           data: encodeFunctionData(p),
         }))
       ),
+      nonce,
     },
   });
 
@@ -76,6 +93,7 @@ async function mutationFn(config: UseSendUserOperationWithSessionKey) {
 export function useSendUserOperationWithSession(
   parameters: UseSendUserOperationWithSessionParameters = {}
 ): UseSendUserOperationWithSessionReturnType {
+  const { isParallel = true } = parameters;
   const {
     kernelClient,
     kernelAccount,
@@ -83,11 +101,15 @@ export function useSendUserOperationWithSession(
     isLoading,
   } = useSessionKernelClient(parameters);
 
+  const seed = useMemo(() => generateRandomString(), []);
+
   const { mutate, error, ...result } = useMutation({
     mutationKey: mutationKey({
       variables: {} as SendUserOperationWithSessionVariables,
       kernelClient,
       kernelAccount,
+      isParallel: isParallel,
+      seed,
     }),
     mutationFn,
   });
@@ -98,9 +120,11 @@ export function useSendUserOperationWithSession(
         variables,
         kernelClient,
         kernelAccount,
+        isParallel: isParallel,
+        seed: generateRandomString(),
       });
     };
-  }, [mutate, kernelClient, kernelAccount]);
+  }, [mutate, kernelClient, kernelAccount, isParallel]);
 
   return {
     ...result,
