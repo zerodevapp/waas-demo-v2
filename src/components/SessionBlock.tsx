@@ -7,19 +7,31 @@ import {
 } from "@/waas";
 import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
 import { Button, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useEffect } from "react";
 import { parseAbi } from "viem";
+import { usePaymasterConfig } from "./Paymaster";
 
 function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
   const { kernelClient } = useKernelClient();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);
-  const { data, write, isDisabled, isPending } =
+  const { paymasterConfig } = usePaymasterConfig({ sessionId });
+
+  const { data, write, isDisabled, isPending, error } =
     useSendUserOperationWithSession({
       sessionId,
-      paymaster: {
-        type: "SPONSOR",
-      },
+      paymaster: paymasterConfig,
     });
+
+  useEffect(() => {
+    if (error) {
+      notifications.show({
+        color: "red",
+        message: "Fail to send userop",
+      });
+    }
+  }, [error]);
 
   return (
     <>
@@ -59,15 +71,7 @@ function SessionInfo({ sessionId }: { sessionId?: `0x${string}` }) {
 export default function SessionBlock() {
   const { openSessionModal } = useSessionModal();
   const sessions = useSessions();
-  const { kernelAccount } = useKernelClient();
-  const accountAddress = kernelAccount?.address;
   const { policies } = useMockedPolicy();
-  const accountSession =
-    sessions &&
-    Object.keys(sessions).filter(
-      (sId) => sessions[sId as `0x${string}`].smartAccount === accountAddress
-    );
-  const isSession = accountSession && accountSession.length > 0;
 
   return (
     <>
@@ -81,18 +85,12 @@ export default function SessionBlock() {
           })
         }
       >
-        Set Permission
+        Create Session
       </Button>
-      {isSession && (
-        <>
-          <Title order={5}>Send UserOp without providing a sessionId</Title>
-          <SessionInfo />
-          <Title order={5}>Send UserOp with sessionId</Title>
-          {accountSession?.map((sId, index) => (
-            <SessionInfo key={index} sessionId={sId as `0x${string}`} />
-          ))}
-        </>
-      )}
+      {sessions &&
+        Object.keys(sessions).map((sId, index) => (
+          <SessionInfo key={index} sessionId={sId as `0x${string}`} />
+        ))}
     </>
   );
 }

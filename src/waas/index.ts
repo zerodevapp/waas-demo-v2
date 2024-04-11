@@ -1,6 +1,6 @@
 export { ZeroDevWaasProvider } from "./components/ZeroDevProvider/ZeroDevWaasProvider";
 
-export { ConnectButton } from "./components/ConnectButton/ConnectButton";
+export { ConnectButton } from "./components/Button/ConnectButton";
 
 export { useConnectModal } from "./hooks/useConnectModal";
 

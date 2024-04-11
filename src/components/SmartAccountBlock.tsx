@@ -1,28 +1,35 @@
 "use client";
-import {
-  ConnectButton,
-  useBalance,
-  useKernelClient,
-  useSendUserOperation,
-} from "@/waas";
+import { useBalance, useKernelClient, useSendUserOperation } from "@/waas";
 import { Button, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useEffect } from "react";
 import { parseAbi } from "viem";
+import { usePaymasterConfig } from "./Paymaster";
 
 export default function SmartAccountBlock() {
   const { address } = useKernelClient();
+  const { paymasterConfig } = usePaymasterConfig();
+
   const {
     data: hash,
     write,
     error,
     isPending,
   } = useSendUserOperation({
-    paymaster: {
-      type: "SPONSOR",
-    },
+    paymaster: paymasterConfig,
   });
   const { data } = useBalance();
   const nftAddress = "0x34bE7f35132E97915633BC1fc020364EA5134863";
   const abi = parseAbi(["function mint(address _to) public"]);
+
+  useEffect(() => {
+    if (error) {
+      notifications.show({
+        color: "red",
+        message: "Fail to send userop",
+      });
+    }
+  }, [error]);
 
   return (
     <>
@@ -34,7 +41,6 @@ export default function SmartAccountBlock() {
         </div>
       )}
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
-        <ConnectButton version="v3" />
         <Button
           variant="outline"
           disabled={isPending}
