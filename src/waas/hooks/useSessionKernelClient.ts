@@ -25,6 +25,7 @@ import {
   type PaymasterSPONSOR,
   type SessionType,
 } from "../types";
+import { ZERODEV_BUNDLER_URL, ZERODEV_PAYMASTER_URL } from "../utils/constants";
 import { getSessionKernelAccount } from "../utils/sessions/getSessionKernelAccount";
 import { useSessions } from "./useSessions";
 
@@ -117,7 +118,7 @@ async function getSessionKernelClient({
     account: kernelAccount,
     chain: chain,
     bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
+      `${ZERODEV_BUNDLER_URL}/${appId}?paymasterProvider=PIMLICO`
     ),
     entryPoint: entryPoint,
     middleware: {
@@ -125,7 +126,7 @@ async function getSessionKernelClient({
         const client = createClient({
           chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId}?paymasterProvider=PIMLICO`
+            `${ZERODEV_BUNDLER_URL}/${appId}?paymasterProvider=PIMLICO`
           ),
         })
           .extend(bundlerActions(entryPoint))
@@ -140,7 +141,7 @@ async function getSessionKernelClient({
           entryPoint: entryPoint,
           chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId}?paymasterProvider=PIMLICO`
+            `${ZERODEV_PAYMASTER_URL}/${appId}?paymasterProvider=PIMLICO`
           ),
         });
         if (paymaster.type === "ERC20") {

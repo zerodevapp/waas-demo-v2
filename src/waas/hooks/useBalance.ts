@@ -17,6 +17,7 @@ import {
   type PublicClient,
 } from "viem";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
+import { ZERODEV_BUNDLER_URL } from "../utils/constants";
 import { useKernelClient } from "./useKernelClient";
 
 export type UseBalanceParameters = {
@@ -115,7 +116,7 @@ async function getBalanceQueryFn({
   }
   const publicClient = createPublicClient({
     chain: chain!,
-    transport: http(`https://rpc.zerodev.app/api/v2/bundler/${appId!}`),
+    transport: http(`${ZERODEV_BUNDLER_URL}/${appId!}`),
   });
   if (tokenAddress) {
     try {

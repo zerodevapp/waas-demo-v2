@@ -15,6 +15,7 @@ import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useSetKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { type KernelVersionType } from "../types";
+import { ZERODEV_PASSKEY_URL } from "../utils/constants";
 import { getEntryPointFromVersion } from "../utils/entryPoint";
 import { getWeb3AuthNValidatorFromVersion } from "../utils/webauthn";
 
@@ -86,13 +87,13 @@ async function mutationFn(
     }
     passkeyValidator = await createPasskeyValidator(publicClient, {
       passkeyName: username,
-      passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId}`,
+      passkeyServerUrl: `${ZERODEV_PASSKEY_URL}/${appId}`,
       entryPoint: entryPoint,
       validatorAddress: webauthnValidator,
     });
   } else {
     passkeyValidator = await getPasskeyValidator(publicClient!, {
-      passkeyServerUrl: `https://passkeys.zerodev.app/api/v3/${appId!}`,
+      passkeyServerUrl: `${ZERODEV_PASSKEY_URL}/${appId!}`,
       entryPoint: entryPoint,
       validatorAddress: webauthnValidator,
     });

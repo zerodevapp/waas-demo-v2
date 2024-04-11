@@ -26,6 +26,7 @@ import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
 import { useKernelAccount } from "../components/ZeroDevProvider/ZeroDevValidatorContext";
 import { PaymasterERC20, PaymasterSPONSOR } from "../types";
+import { ZERODEV_BUNDLER_URL, ZERODEV_PAYMASTER_URL } from "../utils/constants";
 
 export type KernelClientKey = [
   key: string,
@@ -111,7 +112,7 @@ async function getKernelClient({
     account: kernelAccount,
     chain: chain,
     bundlerTransport: http(
-      `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
+      `${ZERODEV_BUNDLER_URL}/${appId!}?paymasterProvider=PIMLICO`
     ),
     entryPoint: entryPoint,
     middleware: {
@@ -119,7 +120,7 @@ async function getKernelClient({
         const client = createClient({
           chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v3/bundler/${appId!}?paymasterProvider=PIMLICO`
+            `${ZERODEV_BUNDLER_URL}/${appId!}?paymasterProvider=PIMLICO`
           ),
         })
           .extend(bundlerActions(entryPoint))
@@ -134,7 +135,7 @@ async function getKernelClient({
           entryPoint: entryPoint,
           chain: chain,
           transport: http(
-            `https://meta-aa-provider.onrender.com/api/v2/paymaster/${appId!}?paymasterProvider=PIMLICO`
+            `${ZERODEV_PAYMASTER_URL}/${appId!}?paymasterProvider=PIMLICO`
           ),
         });
         if (paymaster.type === "ERC20") {
