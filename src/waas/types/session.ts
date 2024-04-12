@@ -1,19 +1,16 @@
 import { type Policy } from "@zerodev/permissions";
-import { KernelValidator } from "@zerodev/sdk";
-import { type Permission } from "@zerodev/session-key";
-import { type EntryPoint } from "permissionless/types";
-import {
-  PrivateKeyAccount,
-  type Abi,
-  type PublicClient,
-} from "viem";
 import {
   type CallPolicyParams,
   type GasPolicyParams,
   type RateLimitPolicyParams,
   type SignatureCallerPolicyParams,
   type SudoPolicyParams,
+  type TimestampPolicyParams,
 } from "@zerodev/permissions/policies";
+import { KernelValidator } from "@zerodev/sdk";
+import { type Permission } from "@zerodev/session-key";
+import { type EntryPoint } from "permissionless/types";
+import { PrivateKeyAccount, type Abi, type PublicClient } from "viem";
 
 export type CreateSessionKernelAccountType = {
   sessionSigner: PrivateKeyAccount;
@@ -29,11 +26,14 @@ export type EncodedPolicy = {
   getPolicyData: `0x${string}`;
   getPolicyInfoInBytes: `0x${string}`;
   policyParams:
-    | CallPolicyParams<Abi | readonly unknown[], string>
-    | GasPolicyParams
-    | RateLimitPolicyParams
-    | SignatureCallerPolicyParams
-    | SudoPolicyParams;
+    | (CallPolicyParams<Abi | readonly unknown[], string> & {
+        type: "call";
+      })
+    | (GasPolicyParams & { type: "gas" })
+    | (RateLimitPolicyParams & { type: "rate-limit" })
+    | (SignatureCallerPolicyParams & { type: "signature-caller" })
+    | (SudoPolicyParams & { type: "sudo" })
+    | (TimestampPolicyParams & { type: "timestamp" });
 };
 
 export type EncodedSessionInfoType = {

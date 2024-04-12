@@ -13,13 +13,7 @@ import { parseAbi } from "viem";
 import ParallelMintWithSession from "./ParallelMintWithSession";
 import { usePaymasterConfig } from "./Paymaster";
 
-function SessionInfo({
-  index,
-  sessionId,
-}: {
-  index: number;
-  sessionId: `0x${string}`;
-}) {
+function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
   const { address } = useKernelClient();
   const tokenAddress = "0x3870419Ba2BBf0127060bCB37f69A1b1C090992B";
   const abi = parseAbi(["function mint(address _to, uint256 amount) public"]);
@@ -62,7 +56,7 @@ function SessionInfo({
         >
           Mint With Session
         </Button>
-        {index === 0 && <ParallelMintWithSession sessionId={sessionId} />}
+        <ParallelMintWithSession sessionId={sessionId} />
       </div>
       {data && <div className="mt-4">MintWithSession UserOp Hash: {data}</div>}
     </>
@@ -90,11 +84,7 @@ export default function SessionBlock() {
       </Button>
       {sessions &&
         Object.keys(sessions).map((sId, index) => (
-          <SessionInfo
-            key={index}
-            index={index}
-            sessionId={sId as `0x${string}`}
-          />
+          <SessionInfo key={index} sessionId={sId as `0x${string}`} />
         ))}
     </>
   );
