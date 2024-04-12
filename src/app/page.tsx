@@ -1,10 +1,13 @@
 "use client";
-import CreateCustomizedKernelButton from "@/components/CreateCustomizedKernelButton";
+import {
+  ConnectButton,
+  CreateCustomizedKernelButton,
+} from "@/components/Button";
 import Navbar from "@/components/Navbar";
 import SessionBlock from "@/components/SessionBlock";
 import SmartAccountBlock from "@/components/SmartAccountBlock";
-import { ConnectButton, useKernelClient } from "@/waas";
 import { Flex, Switch, Text } from "@mantine/core";
+import { useKernelClient } from "@zerodev/waas";
 import { useState } from "react";
 
 export default function Home() {

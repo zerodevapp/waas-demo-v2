@@ -1,10 +1,14 @@
 "use client";
-import { useBalance, useKernelClient, useSendUserOperation } from "@/waas";
+import { usePaymasterConfig } from "@/hooks";
 import { Button, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import {
+  useBalance,
+  useKernelClient,
+  useSendUserOperation,
+} from "@zerodev/waas";
 import { useEffect } from "react";
 import { parseAbi } from "viem";
-import { usePaymasterConfig } from "./Paymaster";
 
 export default function SmartAccountBlock() {
   const { address } = useKernelClient();

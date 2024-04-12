@@ -1,7 +1,6 @@
-import { useKernelClient } from "@/waas";
 import { Flex } from "@mantine/core";
-import { ConnectButton } from "../waas/components/Button";
-import { PaymasterButton } from "./Paymaster";
+import { useKernelClient } from "@zerodev/waas";
+import { ConnectButton, PaymasterButton } from "./Button";
 
 export default function Navbar() {
   const { isConnected } = useKernelClient();

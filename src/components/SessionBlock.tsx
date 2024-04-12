@@ -1,17 +1,15 @@
 "use client";
+import { useMockPolicy, useModal, usePaymasterConfig } from "@/hooks";
+import { Button, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   useKernelClient,
   useSendUserOperationWithSession,
-  useSessionModal,
   useSessions,
-} from "@/waas";
-import { useMockedPolicy } from "@/waas/hooks/mock/useMockPolicy";
-import { Button, Title } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+} from "@zerodev/waas";
 import { useEffect } from "react";
 import { parseAbi } from "viem";
-import ParallelMintWithSession from "./ParallelMintWithSession";
-import { usePaymasterConfig } from "./Paymaster";
+import { ParallelMintButton } from "./Button";
 
 function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
   const { address } = useKernelClient();
@@ -56,7 +54,7 @@ function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
         >
           Mint With Session
         </Button>
-        <ParallelMintWithSession sessionId={sessionId} />
+        <ParallelMintButton sessionId={sessionId} />
       </div>
       {data && <div className="mt-4">MintWithSession UserOp Hash: {data}</div>}
     </>
@@ -64,9 +62,9 @@ function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
 }
 
 export default function SessionBlock() {
-  const { openSessionModal } = useSessionModal();
+  const { openSessionModal } = useModal();
   const sessions = useSessions();
-  const { policies } = useMockedPolicy();
+  const { policies } = useMockPolicy();
 
   return (
     <>

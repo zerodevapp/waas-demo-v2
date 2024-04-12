@@ -1,4 +1,4 @@
-import Providers from "@/components/Providers";
+import Providers from "@/components/Provider/Providers";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import type { Metadata } from "next";
