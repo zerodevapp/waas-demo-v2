@@ -17,7 +17,7 @@ import {
   type Address,
   type Chain,
   type PublicClient,
-  type Transport
+  type Transport,
 } from "viem";
 import { usePublicClient } from "wagmi";
 import { useZeroDevConfig } from "../components/ZeroDevProvider/ZeroDevAppContext";
@@ -110,35 +110,36 @@ async function getKernelClient({
     chain: chain,
     bundlerTransport: http(`${ZERODEV_BUNDLER_URL}/${appId!}`),
     entryPoint: entryPoint,
-    middleware: {
-      sponsorUserOperation: async ({ userOperation }) => {
-        let gasToken;
-        if (!paymaster?.type) return userOperation;
+    middleware: !paymaster?.type
+      ? undefined
+      : {
+          sponsorUserOperation: async ({ userOperation }) => {
+            let gasToken;
 
-        const kernelPaymaster = createZeroDevPaymasterClient({
-          entryPoint: entryPoint,
-          chain: chain,
-          transport: http(`${ZERODEV_PAYMASTER_URL}/${appId!}`),
-        });
-        if (paymaster.type === "ERC20") {
-          const chainId = chain.id as keyof typeof gasTokenAddresses;
-          if (
-            !(chainId in gasTokenAddresses) ||
-            !(paymaster.gasToken in gasTokenAddresses[chainId])
-          ) {
-            throw new Error("ERC20 token not supported");
-          }
-          gasToken =
-            paymaster.gasToken as keyof (typeof gasTokenAddresses)[typeof chainId];
-        }
+            const kernelPaymaster = createZeroDevPaymasterClient({
+              entryPoint: entryPoint,
+              chain: chain,
+              transport: http(`${ZERODEV_PAYMASTER_URL}/${appId!}`),
+            });
+            if (paymaster.type === "ERC20") {
+              const chainId = chain.id as keyof typeof gasTokenAddresses;
+              if (
+                !(chainId in gasTokenAddresses) ||
+                !(paymaster.gasToken in gasTokenAddresses[chainId])
+              ) {
+                throw new Error("ERC20 token not supported");
+              }
+              gasToken =
+                paymaster.gasToken as keyof (typeof gasTokenAddresses)[typeof chainId];
+            }
 
-        return kernelPaymaster.sponsorUserOperation({
-          userOperation,
-          entryPoint: entryPoint,
-          gasToken: gasToken,
-        });
-      },
-    },
+            return kernelPaymaster.sponsorUserOperation({
+              userOperation,
+              entryPoint: entryPoint,
+              gasToken: gasToken,
+            });
+          },
+        },
   }) as KernelAccountClient<
     EntryPoint,
     Transport,
