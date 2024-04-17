@@ -50,10 +50,10 @@ export function PaymasterProvider({ children }: PaymasterModalProviderProps) {
   useEffect(() => {
     const updatePaymaster = () => {
       if (!sessions || Object.keys(sessions).length === 0) return;
-      const array = Array.from([{ type: "NO" as PaymasterType }]).concat(
+      const array = Array.from([{ type: "SPONSOR" as PaymasterType }]).concat(
         Object.keys(sessions).map((sessionId) => ({
           sessionId: sessionId,
-          type: "NO" as PaymasterType,
+          type: "SPONSOR" as PaymasterType,
         }))
       );
       setPaymasterSetting(array);
