@@ -9,7 +9,6 @@ import {
 } from "@zerodev/waas";
 import { useEffect } from "react";
 import { parseAbi } from "viem";
-import { ParallelMintButton } from "./Button";
 
 function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
   const { address } = useKernelClient();
@@ -54,7 +53,7 @@ function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
         >
           Mint With Session
         </Button>
-        <ParallelMintButton sessionId={sessionId} />
+        {/* <ParallelMintButton sessionId={sessionId} /> */}
       </div>
       {data && <div className="mt-4">MintWithSession UserOp Hash: {data}</div>}
     </>

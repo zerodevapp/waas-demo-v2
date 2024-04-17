@@ -30,7 +30,7 @@ interface PaymasterModalProviderProps {
 
 export function PaymasterProvider({ children }: PaymasterModalProviderProps) {
   const [paymasterSetting, setPaymasterSetting] = useState<PaymasterSetting[]>([
-    { type: "NO" as PaymasterType },
+    { type: "SPONSOR" as PaymasterType },
   ]);
   const sessions = useSessions();
 
