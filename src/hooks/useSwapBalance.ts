@@ -76,7 +76,6 @@ export function useSwapBalance({
   tokenAddress,
 }: UseSwapBalanceParameters) {
   const { address } = useAccount();
-  console.log(address);
 
   return useQuery({
     queryKey: [

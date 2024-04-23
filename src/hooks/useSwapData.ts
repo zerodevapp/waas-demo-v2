@@ -7,6 +7,10 @@ import { useMemo } from "react";
 import { type Address } from "viem";
 import { ZERODEV_APP_ID } from "../utils/constants";
 
+export type UswSwapDataParameters = {
+  onSuccess?: () => void;
+};
+
 export type SwapDataVariables = {
   from: Address | undefined;
   to: Address | undefined;
@@ -76,7 +80,7 @@ const getSwapData = async (config: SwapDataParameters) => {
   });
 };
 
-export function useSwapData() {
+export function useSwapData({ onSuccess }: UswSwapDataParameters = {}) {
   const { kernelClient } = useKernelClient();
 
   const { mutate, ...result } = useMutation({
@@ -85,6 +89,7 @@ export function useSwapData() {
       variables: {} as SwapDataVariables,
     }),
     mutationFn: getSwapData,
+    onSuccess,
   });
 
   const write = useMemo(() => {

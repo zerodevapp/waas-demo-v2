@@ -7,17 +7,21 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ZeroDevProvider } from "@zerodev/waas";
 import { ReactNode } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { arbitrum, base, optimism, polygon, sepolia } from "wagmi/chains";
 import { injected } from "wagmi/connectors";
 import { ModalProvider } from "./ModalProvider";
 import { PaymasterProvider } from "./PaymasterProvider";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const config = createConfig({
-    chains: [sepolia],
+    chains: [sepolia, polygon, arbitrum, optimism, base],
     connectors: [injected()],
     transports: {
       [sepolia.id]: http(ZERODEV_BUNDLER_URL),
+      [polygon.id]: http(),
+      [arbitrum.id]: http(),
+      [optimism.id]: http(),
+      [base.id]: http(),
     },
   });
   const queryClient = new QueryClient();

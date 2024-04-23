@@ -16,7 +16,7 @@ export type TokenSymbolType<TChain extends TokenChainType | undefined> =
 export const supportedChain = [polygon, optimism, base, arbitrum];
 
 export const tokenAddress: {
-  [chainId in keyof TokenSymbolsMap]: {
+  [chainId in TokenChainType]: {
     [token in TokenSymbolsMap[chainId]]: Hex;
   };
 } = {
@@ -55,3 +55,18 @@ export const chainIdToName = (chainId: TokenChainType | undefined): string => {
   else if (chainId == 42161) return "Arbitrum";
   else return "Unknown";
 };
+
+export function getTokenByChainIdAndAddress(
+  chainId: TokenChainType,
+  erc20Address: string
+): string | undefined {
+  const tokens = tokenAddress[chainId];
+
+  if (!tokens) return undefined;
+  for (const [token, address] of Object.entries(tokens)) {
+    if (address.toLowerCase() === erc20Address.toLowerCase()) {
+      return token;
+    }
+  }
+  return undefined;
+}

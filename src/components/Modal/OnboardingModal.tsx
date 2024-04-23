@@ -1,21 +1,20 @@
 import { useSwapBalance, useSwapData } from "@/hooks";
+import { Button, Modal } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useKernelClient } from "@zerodev/waas";
+import { useEffect, useState } from "react";
+import { formatUnits, parseUnits } from "viem";
 import {
-  chainIdToName,
-  tokenAddress,
-  type TokenChainType,
-} from "@/utils/tokenAddress";
+  useAccount,
+  useChainId,
+  useSendTransaction,
+  useSwitchChain,
+} from "wagmi";
 import {
-  Box,
-  Button,
-  Modal,
-  NumberInput,
-  Select,
-  SimpleGrid,
-  Text,
-} from "@mantine/core";
-import { useState } from "react";
-import { parseUnits } from "viem";
-import { useAccount } from "wagmi";
+  OnboardingInput,
+  OnboardingPreview,
+  type OnboardingParams,
+} from "./Onboarding";
 
 export interface OnboardingModalProps {
   open: boolean;
@@ -27,145 +26,142 @@ export default function OnboardingModal({
   open,
 }: OnboardingModalProps) {
   const titleId = "Onboarding";
-
-  const [step, setStep] = useState(0);
+  const { address: smartAccountAddress } = useKernelClient();
   const { address } = useAccount();
-  const [srcChain, setSrcChain] = useState<TokenChainType | null>();
-  const [dstChain, setDstChain] = useState<TokenChainType | null>();
-  const [srcToken, setSrcToken] = useState<string | null>();
-  const [dstToken, setDstToken] = useState<string | null>();
-  const [amount, setAmount] = useState<string | undefined>();
-  const { data, isLoading } = useSwapBalance({
-    chainId: srcChain,
-    tokenAddress: srcToken,
+  const chainId = useChainId();
+  const { switchChainAsync, isPending: switchIsPending } = useSwitchChain();
+  const { sendTransactionAsync, isPending: txIsPending } = useSendTransaction();
+  const [step, setStep] = useState(0);
+  const [params, setParams] = useState<OnboardingParams>({
+    srcChain: null,
+    dstChain: null,
+    srcToken: null,
+    dstToken: null,
+    amount: undefined,
   });
-  const { data: swapData, error, write, isPending } = useSwapData();
+
+  const { data: balanceIn, isLoading: isLoadingIn } = useSwapBalance({
+    chainId: params.srcChain,
+    tokenAddress: params.srcToken,
+  });
+  const { data: balanceOut, isLoading: isLoadingOut } = useSwapBalance({
+    chainId: params.dstChain,
+    tokenAddress: params.dstToken,
+  });
+  const {
+    data: swapData,
+    write,
+    isPending,
+  } = useSwapData({
+    onSuccess: () => setStep(1),
+  });
 
   const insufficientError = () => {
-    if (!data || !amount) return undefined;
-    const amountBN = parseUnits(amount, data.decimals);
+    if (!balanceIn || !params.amount) return undefined;
+    const amountBN = parseUnits(params.amount, balanceIn.decimals);
     if (amountBN <= 0n) return "Must be greater than 0";
-    return data.value < amountBN ? "Insufficient Balance" : undefined;
+    return balanceIn.value < amountBN ? "Insufficient Balance" : undefined;
   };
 
-  console.log("swapData", swapData);
-  console.log("swapData error", error);
+  const onClickOnboarding = async () => {
+    if (!params.srcChain || !swapData) return;
+    try {
+      if (chainId !== Number(params.srcChain)) {
+        await switchChainAsync({
+          chainId: Number(params.srcChain),
+        });
+      }
+      const hash = await sendTransactionAsync({
+        to: swapData.targetAddress,
+        value: BigInt(swapData.value),
+        data: swapData.callData,
+      });
+      setStep(0);
+      onClose();
+      setParams({
+        srcChain: null,
+        dstChain: null,
+        srcToken: null,
+        dstToken: null,
+        amount: undefined,
+      });
+      notifications.show({
+        color: "green",
+        title: "Onboarding",
+        message: `Onboarding success tx hash ${hash}`,
+      });
+    } catch (err) {}
+  };
 
-  const isButtonEnable =
-    !!srcChain &&
-    !!dstChain &&
-    !!srcToken &&
-    !!dstToken &&
-    !!amount &&
-    !!data &&
+  const isGetSwapDataReady =
+    !!params.srcChain &&
+    !!params.dstChain &&
+    !!params.srcToken &&
+    !!params.dstToken &&
+    !!params.amount &&
+    !!balanceIn &&
     !insufficientError();
+
+  useEffect(() => {
+    if (open) {
+      setStep(0);
+    }
+  }, [open]);
 
   return (
     <Modal opened={open} onClose={onClose} title={titleId} centered size="lg">
-      <SimpleGrid cols={2} spacing="lg" className="divide-x divide-gray-700">
-        <Box className="p-4 space-y-4">
-          <Text w={500} className="mb-2">
-            Source Chain
-          </Text>
-          <Select
-            value={srcChain?.toString()}
-            onChange={(value) => {
-              setSrcChain(value as unknown as TokenChainType);
-              setSrcToken(null);
-            }}
-            data={Object.keys(tokenAddress).map((chainId) => ({
-              value: chainId,
-              label: chainIdToName(chainId as unknown as TokenChainType),
-            }))}
-            className="mb-4"
-          />
-          <Text w={500}>Source Token</Text>
-          <div>
-            {data && (
-              <Text w={500} className="text-sm text-gray-500">
-                Balance {data.formatted}
-              </Text>
-            )}
-            <Select
-              value={srcToken}
-              onChange={(value) => setSrcToken(value)}
-              data={
-                srcChain
-                  ? Object.entries(tokenAddress[srcChain]).map(
-                      ([token, address]) => ({
-                        value: address,
-                        label: token,
-                      })
-                    )
-                  : []
-              }
-            />
-          </div>
-
-          <NumberInput
-            label="Input Amount"
-            hideControls
-            className="mt-1"
-            value={amount}
-            onChange={(val) => setAmount(val.toString())}
-            error={insufficientError()}
-          />
-        </Box>
-
-        <Box className="p-4 space-y-4">
-          <Text w={500} className="mb-2">
-            Destination Chain
-          </Text>
-          <Select
-            value={dstChain?.toString()}
-            onChange={(value) => {
-              setDstChain(value as unknown as TokenChainType);
-              setDstToken(null);
-            }}
-            data={Object.keys(tokenAddress).map((chainId) => ({
-              value: chainId,
-              label: chainIdToName(chainId as unknown as TokenChainType),
-            }))}
-            className="mb-4"
-          />
-          <Text w={500} className="mb-2">
-            Destination Token
-          </Text>
-          <Select
-            value={dstToken}
-            onChange={(value) => setDstToken(value)}
-            data={
-              dstChain
-                ? Object.entries(tokenAddress[dstChain]).map(
-                    ([token, address]) => ({
-                      value: address,
-                      label: token,
-                    })
-                  )
-                : []
-            }
-          />
-        </Box>
-      </SimpleGrid>
-
+      {step === 0 && <OnboardingInput params={params} setParams={setParams} />}
+      {step === 1 && (
+        <OnboardingPreview
+          params={params}
+          amountOut={formatUnits(
+            BigInt(swapData?.amountOut ?? 0n),
+            balanceOut?.decimals ?? 18
+          )}
+        />
+      )}
       <div className="flex justify-center mt-6">
-        <Button
-          disabled={!isButtonEnable}
-          loading={isLoading || isPending}
-          onClick={() =>
-            write({
-              from: address,
-              to: address,
-              tokenIn: srcToken,
-              tokenOut: dstToken,
-              srcChainId: Number(srcChain?.toString()),
-              dstChainId: Number(dstChain?.toString()),
-              amountIn: parseUnits(amount as string, data?.decimals).toString(),
-            })
-          }
-        >
-          Get Output Amount
-        </Button>
+        {step === 0 && (
+          <Button
+            disabled={!isGetSwapDataReady}
+            loading={isLoadingIn || isLoadingOut || isPending}
+            onClick={() =>
+              write({
+                from: address,
+                to: smartAccountAddress,
+                tokenIn: params.srcToken,
+                tokenOut: params.dstToken,
+                srcChainId: Number(params.srcChain?.toString()),
+                dstChainId: Number(params.dstChain?.toString()),
+                amountIn: parseUnits(
+                  params.amount as string,
+                  balanceIn?.decimals
+                ).toString(),
+              })
+            }
+          >
+            Get Output Amount
+          </Button>
+        )}
+        {step === 1 && (
+          <div className="mb-2 flex justify-center gap-2">
+            <Button
+              disabled={switchIsPending || txIsPending}
+              onClick={() => setStep(0)}
+            >
+              Back
+            </Button>
+            <Button
+              loading={switchIsPending || txIsPending}
+              disabled={!params.srcChain || !swapData}
+              onClick={() => {
+                onClickOnboarding();
+              }}
+            >
+              Onboard
+            </Button>
+          </div>
+        )}
       </div>
     </Modal>
   );
