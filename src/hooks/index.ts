@@ -5,3 +5,5 @@ export { usePaymasterConfig, usePaymasterProvider } from "./usePaymaster";
 export { useModal } from "./useModal";
 
 export { useSwapBalance } from "./useSwapBalance";
+
+export { useSwapData } from "./useSwapData";

@@ -1,4 +1,4 @@
-import { useSwapBalance } from "@/hooks";
+import { useSwapBalance, useSwapData } from "@/hooks";
 import {
   chainIdToName,
   tokenAddress,
@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
 
 export interface OnboardingModalProps {
   open: boolean;
@@ -27,6 +28,8 @@ export default function OnboardingModal({
 }: OnboardingModalProps) {
   const titleId = "Onboarding";
 
+  const [step, setStep] = useState(0);
+  const { address } = useAccount();
   const [srcChain, setSrcChain] = useState<TokenChainType | null>();
   const [dstChain, setDstChain] = useState<TokenChainType | null>();
   const [srcToken, setSrcToken] = useState<string | null>();
@@ -36,6 +39,7 @@ export default function OnboardingModal({
     chainId: srcChain,
     tokenAddress: srcToken,
   });
+  const { data: swapData, error, write, isPending } = useSwapData();
 
   const insufficientError = () => {
     if (!data || !amount) return undefined;
@@ -43,6 +47,9 @@ export default function OnboardingModal({
     if (amountBN <= 0n) return "Must be greater than 0";
     return data.value < amountBN ? "Insufficient Balance" : undefined;
   };
+
+  console.log("swapData", swapData);
+  console.log("swapData error", error);
 
   const isButtonEnable =
     !!srcChain &&
@@ -144,8 +151,18 @@ export default function OnboardingModal({
       <div className="flex justify-center mt-6">
         <Button
           disabled={!isButtonEnable}
-          loading={isLoading}
-          onClick={() => console.log("Process transaction")}
+          loading={isLoading || isPending}
+          onClick={() =>
+            write({
+              from: address,
+              to: address,
+              tokenIn: srcToken,
+              tokenOut: dstToken,
+              srcChainId: Number(srcChain?.toString()),
+              dstChainId: Number(dstChain?.toString()),
+              amountIn: parseUnits(amount as string, data?.decimals).toString(),
+            })
+          }
         >
           Get Output Amount
         </Button>
