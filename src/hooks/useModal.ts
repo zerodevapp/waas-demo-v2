@@ -9,6 +9,8 @@ export function useModal() {
     openSessionModal,
     paymasterModalOpen,
     openPaymasterModal,
+    onboardingModalOpen,
+    openOnboardingModal,
   } = useContext(ModalContext);
 
   return {
@@ -18,5 +20,7 @@ export function useModal() {
     openSessionModal,
     paymasterModalOpen,
     openPaymasterModal,
+    onboardingModalOpen,
+    openOnboardingModal,
   };
 }

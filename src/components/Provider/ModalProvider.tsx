@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import ConnectModal from "../Modal/ConnectModal";
+import OnboardingModal from "../Modal/OnboardingModal";
 import PaymasterModal from "../Modal/PaymasterModal";
 import SessionModal from "../Modal/SessionModal";
 
@@ -31,12 +32,15 @@ interface ModalContextValue {
   openSessionModal?: ({ policies }: { policies: Policy[] | undefined }) => void;
   paymasterModalOpen: boolean;
   openPaymasterModal?: () => void;
+  onboardingModalOpen: boolean;
+  openOnboardingModal?: () => void;
 }
 
 export const ModalContext = createContext<ModalContextValue>({
   connectModalOpen: false,
   sessionModalOpen: false,
   paymasterModalOpen: false,
+  onboardingModalOpen: false,
 });
 
 interface ModalProviderProps {
@@ -62,6 +66,11 @@ export function ModalProvider({ children }: ModalProviderProps) {
     closeModal: closePaymasterModal,
     isModalOpen: paymasterModalOpen,
     openModal: openPaymasterModal,
+  } = useModalStateValue();
+  const {
+    closeModal: closeOnboardingModal,
+    isModalOpen: onboardingModalOpen,
+    openModal: openOnboardingModal,
   } = useModalStateValue();
 
   useEffect(() => {
@@ -90,6 +99,10 @@ export function ModalProvider({ children }: ModalProviderProps) {
     openPaymasterModal();
   }, [openPaymasterModal]);
 
+  const openOnboardingModalAction = useCallback(() => {
+    openOnboardingModal();
+  }, [openOnboardingModal]);
+
   return (
     <ModalContext.Provider
       value={useMemo(
@@ -100,6 +113,8 @@ export function ModalProvider({ children }: ModalProviderProps) {
           openSessionModal: openSessionModalWithPolicy,
           paymasterModalOpen,
           openPaymasterModal: openPaymasterModalAction,
+          onboardingModalOpen,
+          openOnboardingModal: openOnboardingModalAction,
         }),
         [
           connectModalOpen,
@@ -108,6 +123,8 @@ export function ModalProvider({ children }: ModalProviderProps) {
           openSessionModalWithPolicy,
           paymasterModalOpen,
           openPaymasterModalAction,
+          onboardingModalOpen,
+          openOnboardingModalAction,
         ]
       )}
     >
@@ -123,6 +140,10 @@ export function ModalProvider({ children }: ModalProviderProps) {
         policies={policies}
       />
       <PaymasterModal onClose={closePaymasterModal} open={paymasterModalOpen} />
+      <OnboardingModal
+        onClose={closeOnboardingModal}
+        open={onboardingModalOpen}
+      />
     </ModalContext.Provider>
   );
 }
