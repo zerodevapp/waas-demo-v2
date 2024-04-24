@@ -54,6 +54,12 @@ export default function OnboardingModal({
     isPending,
   } = useSwapData({
     onSuccess: () => setStep(1),
+    onError: (error) => {
+      notifications.show({
+        color: "red",
+        message: error.message,
+      });
+    },
   });
 
   const insufficientError = () => {

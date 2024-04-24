@@ -9,6 +9,7 @@ import { ZERODEV_APP_ID } from "../utils/constants";
 
 export type UswSwapDataParameters = {
   onSuccess?: () => void;
+  onError?: (error: Error) => void;
 };
 
 export type SwapDataVariables = {
@@ -80,7 +81,10 @@ const getSwapData = async (config: SwapDataParameters) => {
   });
 };
 
-export function useSwapData({ onSuccess }: UswSwapDataParameters = {}) {
+export function useSwapData({
+  onSuccess,
+  onError,
+}: UswSwapDataParameters = {}) {
   const { kernelClient } = useKernelClient();
 
   const { mutate, ...result } = useMutation({
@@ -90,6 +94,7 @@ export function useSwapData({ onSuccess }: UswSwapDataParameters = {}) {
     }),
     mutationFn: getSwapData,
     onSuccess,
+    onError,
   });
 
   const write = useMemo(() => {
