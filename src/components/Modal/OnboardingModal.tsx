@@ -4,6 +4,7 @@ import { notifications } from "@mantine/notifications";
 import { useKernelClient } from "@zerodev/waas";
 import { useEffect, useState } from "react";
 import { BaseError, formatUnits, parseUnits } from "viem";
+import { arbitrum } from "viem/chains";
 import {
   useAccount,
   useChainId,
@@ -34,7 +35,7 @@ export default function OnboardingModal({
   const [step, setStep] = useState(0);
   const [params, setParams] = useState<OnboardingParams>({
     srcChain: null,
-    dstChain: null,
+    dstChain: arbitrum.id,
     srcToken: null,
     dstToken: null,
     amount: undefined,
@@ -77,7 +78,7 @@ export default function OnboardingModal({
     if (!open) {
       setParams({
         srcChain: null,
-        dstChain: null,
+        dstChain: arbitrum.id,
         srcToken: null,
         dstToken: null,
         amount: undefined,

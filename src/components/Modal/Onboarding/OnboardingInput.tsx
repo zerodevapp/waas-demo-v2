@@ -9,7 +9,7 @@ import { parseUnits } from "viem";
 
 export type OnboardingParams = {
   srcChain: TokenChainType | null;
-  dstChain: TokenChainType | null;
+  dstChain: TokenChainType;
   srcToken: string | null;
   dstToken: string | null;
   amount: string | undefined;
@@ -95,21 +95,7 @@ export function OnboardingInput({
         <Text w={500} className="mb-2">
           Destination Chain
         </Text>
-        <Select
-          value={params.dstChain?.toString()}
-          onChange={(value) => {
-            setParams((prev: OnboardingParams) => ({
-              ...prev,
-              dstChain: value as unknown as TokenChainType,
-              dstToken: null,
-            }));
-          }}
-          data={Object.keys(tokenAddress).map((chainId) => ({
-            value: chainId,
-            label: chainIdToName(chainId as unknown as TokenChainType),
-          }))}
-          className="mb-4"
-        />
+        <Text>{chainIdToName(params.dstChain)}</Text>
         <Text w={500} className="mb-2">
           Destination Token
         </Text>
