@@ -1,4 +1,5 @@
 "use client";
+import { WithdrawAllButton } from "@/components/Button";
 import { usePaymasterConfig } from "@/hooks";
 import { Button, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
@@ -44,6 +45,7 @@ export default function SmartAccountBlock() {
           Balance: {`${data.formatted} ${data.symbol}`}
         </div>
       )}
+      <WithdrawAllButton />
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
         <Button
           variant="outline"
