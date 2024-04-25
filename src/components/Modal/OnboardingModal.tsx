@@ -3,7 +3,7 @@ import { Button, Modal } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useKernelClient } from "@zerodev/waas";
 import { useEffect, useState } from "react";
-import { formatUnits, parseUnits } from "viem";
+import { BaseError, formatUnits, parseUnits } from "viem";
 import {
   useAccount,
   useChainId,
@@ -40,7 +40,11 @@ export default function OnboardingModal({
     amount: undefined,
   });
 
-  const { data: balanceIn, isLoading: isLoadingIn } = useSwapBalance({
+  const {
+    data: balanceIn,
+    isLoading: isLoadingIn,
+    error: balanceInError,
+  } = useSwapBalance({
     chainId: params.srcChain,
     tokenAddress: params.srcToken,
   });
@@ -51,16 +55,36 @@ export default function OnboardingModal({
   const {
     data: swapData,
     write,
+    error,
     isPending,
   } = useSwapData({
     onSuccess: () => setStep(1),
-    onError: (error) => {
+    onError: (error: any) => {
+      const reason = error.errors
+        ?.flatMap((e: any) => e.failed.map((f: any) => f.code))
+        .slice(0, 2)
+        .join(", ");
+
       notifications.show({
         color: "red",
-        message: error.message,
+        title: error.message,
+        message: reason,
       });
     },
   });
+
+  useEffect(() => {
+    if (!open) {
+      setParams({
+        srcChain: null,
+        dstChain: null,
+        srcToken: null,
+        dstToken: null,
+        amount: undefined,
+      });
+      setStep(0);
+    }
+  }, [open]);
 
   const insufficientError = () => {
     if (!balanceIn || !params.amount) return undefined;
@@ -82,21 +106,23 @@ export default function OnboardingModal({
         value: BigInt(swapData.value),
         data: swapData.callData,
       });
-      setStep(0);
       onClose();
-      setParams({
-        srcChain: null,
-        dstChain: null,
-        srcToken: null,
-        dstToken: null,
-        amount: undefined,
-      });
       notifications.show({
         color: "green",
-        title: "Onboarding",
-        message: `Onboarding success tx hash ${hash}`,
+        title: "Onboarding success",
+        message: `Tx hash ${hash}`,
       });
-    } catch (err) {}
+    } catch (err: any) {
+      let message;
+      if (err instanceof BaseError) {
+        const baseError = err as BaseError;
+        message = baseError.shortMessage;
+      }
+      notifications.show({
+        color: "red",
+        message: message ?? "Unknown Error occurred",
+      });
+    }
   };
 
   const isGetSwapDataReady =

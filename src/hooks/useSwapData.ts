@@ -9,7 +9,7 @@ import { ZERODEV_APP_ID } from "../utils/constants";
 
 export type UswSwapDataParameters = {
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onError?: (error: any) => void;
 };
 
 export type SwapDataVariables = {

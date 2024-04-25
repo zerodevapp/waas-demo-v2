@@ -1,7 +1,8 @@
 import { Hex } from "viem";
-import { arbitrum, base, optimism, polygon } from "viem/chains";
+import { arbitrum, base, mainnet, optimism, polygon } from "viem/chains";
 
 export type TokenSymbolsMap = {
+  1: "ETH" | "USDC" | "USDT" | "DAI";
   10: "ETH" | "USDC" | "USDCe" | "USDT" | "DAI";
   137: "MATIC" | "USDC" | "USDCe" | "USDT" | "DAI";
   8453: "ETH" | "USDC" | "DAI";
@@ -13,13 +14,19 @@ export type TokenChainType = keyof TokenSymbolsMap;
 export type TokenSymbolType<TChain extends TokenChainType | undefined> =
   TChain extends TokenChainType ? TokenSymbolsMap[TChain] : undefined;
 
-export const supportedChain = [polygon, optimism, base, arbitrum];
+export const supportedChain = [polygon, optimism, base, arbitrum, mainnet];
 
 export const tokenAddress: {
   [chainId in TokenChainType]: {
     [token in TokenSymbolsMap[chainId]]: Hex;
   };
 } = {
+  1: {
+    ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    USDC: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+  },
   10: {
     ETH: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
     USDC: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
@@ -49,6 +56,7 @@ export const tokenAddress: {
 };
 
 export const chainIdToName = (chainId: TokenChainType | undefined): string => {
+  if (chainId == 1) return "Ethereum";
   if (chainId == 10) return "Optimism";
   else if (chainId == 137) return "Polygon";
   else if (chainId == 8453) return "Base";
