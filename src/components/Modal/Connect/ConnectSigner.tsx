@@ -16,12 +16,16 @@ export enum SignerType {
 
 export default function ConnectSigner({
   version,
+  loginWithSocial,
 }: {
   version: KernelVersionType;
+  loginWithSocial: (provider: "google" | "facebook") => void;
 }) {
   const { connectors } = useConnect();
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
   const { connect, error } = useCreateKernelClientEOA({ version });
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);
@@ -31,7 +35,9 @@ export default function ConnectSigner({
     <div className="flex flex-col items-center gap-2">
       {signerStep === SignerType.None && (
         <>
-          <Title order={5}>EOA</Title>
+          <Title order={5} style={{ color: "black" }}>
+            EOA
+          </Title>
           {connectors.map((connector) => (
             <div key={connector.uid} className="w-full">
               <Button
@@ -47,7 +53,36 @@ export default function ConnectSigner({
               </Button>
             </div>
           ))}
-          <Title order={5}>Passkey</Title>
+          <Title order={5} style={{ color: "black" }}>
+            Social
+          </Title>
+          <Button
+            fullWidth
+            variant="outline"
+            style={{ justifyContent: "center" }}
+            loading={isGoogleLoading}
+            onClick={() => {
+              setIsGoogleLoading(true);
+              loginWithSocial("google");
+            }}
+          >
+            Google
+          </Button>
+          <Button
+            fullWidth
+            variant="outline"
+            style={{ justifyContent: "center" }}
+            onClick={() => {
+              setIsFacebookLoading(true);
+              loginWithSocial("facebook");
+            }}
+            loading={isFacebookLoading}
+          >
+            Facebook
+          </Button>
+          <Title order={5} style={{ color: "black" }}>
+            Passkey
+          </Title>
           <Button
             variant="outline"
             style={{ justifyContent: "center" }}

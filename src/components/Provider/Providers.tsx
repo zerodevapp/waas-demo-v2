@@ -39,7 +39,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       <Notifications />
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <ZeroDevProvider appId={ZERODEV_APP_ID} chain={arbitrum}>
+          <ZeroDevProvider appId={ZERODEV_APP_ID} chain={sepolia}>
             <PaymasterProvider>
               <ModalProvider>{children}</ModalProvider>
             </PaymasterProvider>
