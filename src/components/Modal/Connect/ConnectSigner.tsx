@@ -19,13 +19,12 @@ export default function ConnectSigner({
   loginWithSocial,
 }: {
   version: KernelVersionType;
-  loginWithSocial: (provider: "google" | "facebook") => void;
+  loginWithSocial: (provider: "google") => void;
 }) {
   const { connectors } = useConnect();
   const [signerStep, setSignerStep] = useState<SignerType>(SignerType.None);
   const { connect, error } = useCreateKernelClientEOA({ version });
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
 
   useEffect(() => {
     if (error) setSignerStep(SignerType.None);
@@ -67,18 +66,6 @@ export default function ConnectSigner({
             }}
           >
             Google
-          </Button>
-          <Button
-            fullWidth
-            variant="outline"
-            style={{ justifyContent: "center" }}
-            onClick={() => {
-              setIsFacebookLoading(true);
-              loginWithSocial("facebook");
-            }}
-            loading={isFacebookLoading}
-          >
-            Facebook
           </Button>
           <Title order={5} style={{ color: "black" }}>
             Passkey
