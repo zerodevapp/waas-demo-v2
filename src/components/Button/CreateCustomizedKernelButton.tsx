@@ -7,24 +7,35 @@ import {
   createKernelAccountClient,
   createZeroDevPaymasterClient,
 } from "@zerodev/sdk";
-import { useSetKernelClient } from "@zerodev/waas";
+import { useChainId, useChains, useSetKernelClient } from "@zerodev/waas";
 import { ENTRYPOINT_ADDRESS_V07 } from "permissionless";
 import { EntryPoint } from "permissionless/types";
 import { useState } from "react";
-import { getAbiItem, http, toFunctionSelector, zeroAddress } from "viem";
+import {
+  createPublicClient,
+  getAbiItem,
+  http,
+  toFunctionSelector,
+  zeroAddress,
+  type Chain,
+} from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { useChains, usePublicClient } from "wagmi";
 
 export function CreateCustomizedKernelButton() {
   const [isLoading, setIsLoading] = useState(false);
-  const publicClient = usePublicClient();
   const chains = useChains();
+  const chainId = useChainId();
   const { setKernelClient, error } = useSetKernelClient();
 
   const createKernelClient = async () => {
-    const chain = chains[0];
-    if (!publicClient || !chain) return;
+    const chain = chains.find((c: Chain) => c.id === chainId);
+    if (!chain) return;
     setIsLoading(true);
+
+    const publicClient = createPublicClient({
+      chain: chain,
+      transport: http(getBundler(chain.id)),
+    });
 
     try {
       const entryPoint = ENTRYPOINT_ADDRESS_V07 as EntryPoint;
@@ -65,20 +76,16 @@ export function CreateCustomizedKernelButton() {
           },
         },
       });
-
       setKernelClient(kernelClient);
-    } catch (err) {}
+    } catch (err) {
+      console.log(err);
+    }
 
     setIsLoading(false);
   };
 
   return (
-    <Button
-      disabled={isLoading || !publicClient}
-      loading={isLoading}
-      variant="outline"
-      onClick={createKernelClient}
-    >
+    <Button loading={isLoading} variant="outline" onClick={createKernelClient}>
       Generate Private key
     </Button>
   );

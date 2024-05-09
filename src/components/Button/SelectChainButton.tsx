@@ -1,6 +1,7 @@
 import { Button, Flex, Menu } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useChainId, useChains, useSwitchChain } from "@zerodev/waas";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const CustomChevronDown = () => (
   <svg fill="none" height="7" width="14" xmlns="http://www.w3.org/2000/svg">
@@ -19,7 +20,16 @@ export function SelectChainButton() {
   const chainId = useChainId();
   const chains = useChains();
   const [chainSwitching, setChainSwitching] = useState();
-  const { switchChain, isPending } = useSwitchChain();
+  const { switchChain, isPending, error } = useSwitchChain();
+
+  useEffect(() => {
+    if (error) {
+      notifications.show({
+        color: "red",
+        message: error?.message || "Switch chain failed",
+      });
+    }
+  }, [error]);
 
   return (
     <Menu>
