@@ -15,11 +15,17 @@ export function WithdrawAllButton() {
   const [isLoading, setIsLoading] = useState(false);
 
   const onClick = async () => {
+    if (!address || !data?.value) return;
     try {
       setIsLoading(true);
-      const hash = await kernelClient?.sendTransaction({
-        to: address,
-        value: data?.value,
+      const hash = await kernelClient?.sendTransactions({
+        transactions: [
+          {
+            to: address,
+            value: data?.value,
+            data: "0x",
+          },
+        ],
       });
       notifications.show({
         color: "green",

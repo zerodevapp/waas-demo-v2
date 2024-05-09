@@ -1,6 +1,6 @@
 "use client";
 import { WithdrawAllButton } from "@/components/Button";
-import { usePaymasterConfig } from "@/hooks";
+import { useModal, usePaymasterConfig } from "@/hooks";
 import { Button, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import {
@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { parseAbi } from "viem";
 
 export default function SmartAccountBlock() {
+  useModal();
   const { address } = useKernelClient();
   const { paymasterConfig } = usePaymasterConfig();
 
@@ -20,6 +21,7 @@ export default function SmartAccountBlock() {
     write,
     error,
     isPending,
+    isLoading,
   } = useSendUserOperation({
     paymaster: paymasterConfig,
   });
@@ -49,7 +51,7 @@ export default function SmartAccountBlock() {
       <div className="flex flex-row justify-center items-center space-x-4 mt-4">
         <Button
           variant="outline"
-          disabled={isPending}
+          disabled={isLoading}
           loading={isPending}
           onClick={() => {
             write([

@@ -16,7 +16,7 @@ function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
   const abi = parseAbi(["function mint(address _to, uint256 amount) public"]);
   const { paymasterConfig } = usePaymasterConfig({ sessionId });
 
-  const { data, write, isDisabled, isPending, error } =
+  const { data, write, isPending, error, isLoading } =
     useSendUserOperationWithSession({
       sessionId,
       paymaster: paymasterConfig,
@@ -37,7 +37,7 @@ function SessionInfo({ sessionId }: { sessionId: `0x${string}` }) {
         {sessionId && <p>{`Permission ID: ${sessionId}`}</p>}
         <Button
           variant="outline"
-          disabled={isDisabled}
+          disabled={isLoading}
           loading={isPending}
           onClick={() => {
             write([

@@ -16,7 +16,7 @@ export function ConnectButton({ version }: { version: KernelVersionType }) {
       variant="outline"
       onClick={() => {
         if (isConnected) {
-          disconnect();
+          disconnect({});
         } else {
           openConnectModal?.({ version });
         }

@@ -1,4 +1,4 @@
-import { Button, Loader, Modal } from "@mantine/core";
+import { Button, Modal } from "@mantine/core";
 import { type Policy } from "@zerodev/permissions";
 import { ParamOperator } from "@zerodev/session-key";
 import {
@@ -7,7 +7,6 @@ import {
   useKernelClient,
 } from "@zerodev/waas";
 import { ENTRYPOINT_ADDRESS_V06 } from "permissionless";
-import { useEffect, useState } from "react";
 import { parseAbi } from "viem";
 
 export interface SessionModalProps {
@@ -20,14 +19,13 @@ interface CreateBasicSessionModalProps
 
 function CreateSessionModal({ onClose, open, policies }: SessionModalProps) {
   const titleId = "Session";
-  const [isLoading, setIsLoading] = useState(false);
-  const { kernelAccount } = useKernelClient();
-  const { write, data, error } = useCreateSession();
-
-  useEffect(() => {
-    if (data) onClose();
-    setIsLoading(false);
-  }, [data, error, onClose]);
+  const { write, isPending } = useCreateSession({
+    mutation: {
+      onSuccess: () => {
+        onClose();
+      },
+    },
+  });
 
   return (
     <Modal
@@ -41,9 +39,9 @@ function CreateSessionModal({ onClose, open, policies }: SessionModalProps) {
         <h1>Permission Approval</h1>
         <Button
           variant="outline"
-          disabled={isLoading || !write || !kernelAccount}
+          loading={isPending}
+          disabled={!write}
           onClick={() => {
-            setIsLoading(true);
             write({
               policies,
             });
@@ -51,7 +49,6 @@ function CreateSessionModal({ onClose, open, policies }: SessionModalProps) {
         >
           Approve
         </Button>
-        {isLoading && <Loader />}
       </div>
     </Modal>
   );
@@ -62,19 +59,19 @@ function CreateBasicSessionModal({
   open,
 }: CreateBasicSessionModalProps) {
   const titleId = "Session";
-  const [isLoading, setIsLoading] = useState(false);
   const { address } = useKernelClient();
-  const { write, data, error } = useCreateBasicSession();
+  const { write, data, error, isPending } = useCreateBasicSession({
+    mutation: {
+      onSuccess: () => {
+        onClose();
+      },
+    },
+  });
 
   const contractAddress = "0x3870419Ba2BBf0127060bCB37f69A1b1C090992B";
   const contractABI = parseAbi([
     "function mint(address _to, uint256 amount) public",
   ]);
-
-  useEffect(() => {
-    if (data) onClose();
-    setIsLoading(false);
-  }, [data, error, onClose]);
 
   return (
     <Modal
@@ -88,10 +85,9 @@ function CreateBasicSessionModal({
         <h1>Permission Approval</h1>
         <Button
           variant="outline"
-          disabled={isLoading || !write || !address}
+          loading={isPending}
+          disabled={!write || !address}
           onClick={() => {
-            setIsLoading(true);
-
             write?.({
               permissions: [
                 {
@@ -124,7 +120,6 @@ function CreateBasicSessionModal({
         >
           Approve
         </Button>
-        {isLoading && <Loader />}
       </div>
     </Modal>
   );
