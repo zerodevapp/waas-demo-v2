@@ -26,6 +26,10 @@ export default function Providers({ children }: { children: ReactNode }) {
       [arbitrum.id]: process.env.NEXT_PUBLIC_ZERODEV_APP_ARBITRUM_ID || "",
       [sepolia.id]: process.env.NEXT_PUBLIC_ZERODEV_APP_SEPOLIA_ID || "",
     },
+    transports: {
+      [arbitrum.id]: http(getBundler(arbitrum.id)),
+      [sepolia.id]: http(getBundler(sepolia.id)),
+    },
   });
 
   return (
