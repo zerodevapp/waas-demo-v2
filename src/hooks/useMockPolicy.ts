@@ -23,11 +23,13 @@ export function useMockPolicy() {
       const sudoPolicy = toSudoPolicy({});
       const firstPolicies = {
         maxGasAllowedInWei: gasPolicyMeta[0],
-        policy: [firstGasPolicy, sudoPolicy],
+        policy: [sudoPolicy],
+        // policy: [firstGasPolicy, sudoPolicy],
       };
       const secondPolicies = {
         maxGasAllowedInWei: gasPolicyMeta[1],
-        policy: [secondGasPolicy, sudoPolicy],
+        policy: [sudoPolicy],
+        // policy: [secondGasPolicy, sudoPolicy],
       };
 
       setPolicies([firstPolicies, secondPolicies]);

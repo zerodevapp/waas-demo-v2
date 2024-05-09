@@ -1,6 +1,12 @@
+"use client";
 import { Flex } from "@mantine/core";
 import { useKernelClient } from "@zerodev/waas";
-import { ConnectButton, OnboardingButton, PaymasterButton } from "./Button";
+import {
+  ConnectButton,
+  OnboardingButton,
+  PaymasterButton,
+  SelectChainButton,
+} from "./Button";
 
 export default function Navbar() {
   const { isConnected } = useKernelClient();
@@ -19,6 +25,7 @@ export default function Navbar() {
           <>
             <OnboardingButton />
             <PaymasterButton />
+            <SelectChainButton />
             <ConnectButton version="v3" />
           </>
         )}
