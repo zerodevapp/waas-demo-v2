@@ -49,7 +49,7 @@ export function PaymasterProvider({ children }: PaymasterModalProviderProps) {
 
   useEffect(() => {
     const updatePaymaster = () => {
-      if (!sessions || Object.keys(sessions).length === 0) return;
+      if (!sessions) return;
       const array = Array.from([{ type: "SPONSOR" as PaymasterType }]).concat(
         Object.keys(sessions).map((sessionId) => ({
           sessionId: sessionId,

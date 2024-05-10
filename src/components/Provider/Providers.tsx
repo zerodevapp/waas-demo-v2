@@ -1,5 +1,5 @@
 "use client";
-import { ZERODEV_ARB_APP_ID, getBundler } from "@/utils/constants";
+import { getBundler } from "@/utils/constants";
 import { MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { Notifications } from "@mantine/notifications";
@@ -37,11 +37,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       <Notifications />
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
-          <ZeroDevProvider
-            appId={ZERODEV_ARB_APP_ID}
-            chain={arbitrum}
-            config={zdConfig}
-          >
+          <ZeroDevProvider config={zdConfig}>
             <PaymasterProvider>
               <ModalProvider>{children}</ModalProvider>
             </PaymasterProvider>
